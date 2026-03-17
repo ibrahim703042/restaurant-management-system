@@ -4,7 +4,7 @@
 @section('page-title', 'Point of Sale')
 
 @push('styles')
-<link href="{{ asset('css/pos.css') }}?v=2" rel="stylesheet">
+<link href="{{ asset('css/pos.css') }}?v=4" rel="stylesheet">
 @endpush
 
 @section('main-section')
@@ -32,43 +32,73 @@
         <input type="hidden" name="payment_method" id="f_payment_method" value="cash">
         <input type="hidden" name="amount_paid" id="f_amount_paid" value="0">
 
-        <div class="pos-category-tabs nav nav-pills" role="tablist">
-            @php $ci = 0; @endphp
-            @foreach ($categories as $cat)
-                @if ($cat->products->isEmpty()) @continue @endif
-                <button type="button" class="nav-link d-flex align-items-center gap-2 {{ $ci === 0 ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#cat-{{ $cat->id }}">
-                    <img src="{{ \App\Support\MediaUrl::forCategory($cat) }}" alt="" class="rounded-circle" style="width:28px;height:28px;object-fit:cover">
-                    {{ $cat->name }}
-                </button>
-                @php $ci++; @endphp
-            @endforeach
-        </div>
+        @php
+            $posCategories = $categories->filter(fn ($c) => $c->products->isNotEmpty())->values();
+            $posCatCount = $posCategories->count();
+            $manyPosCategories = $posCatCount > 14;
+        @endphp
 
-        <div class="tab-content">
-            @php $ci = 0; @endphp
-            @foreach ($categories as $cat)
-                @if ($cat->products->isEmpty()) @continue @endif
-                <div class="tab-pane fade {{ $ci === 0 ? 'show active' : '' }}" id="cat-{{ $cat->id }}">
-                    <div class="row g-2 g-md-3">
-                        @foreach ($cat->products as $p)
-                            <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
-                                <button type="button" class="btn btn-outline-primary w-100 pos-add pos-product-btn text-center"
-                                    data-id="{{ $p->id }}" data-name="{{ e($p->product_name) }}" data-price="{{ $p->price }}">
-                                    <img src="{{ \App\Support\MediaUrl::forProduct($p) }}" alt="" class="rounded mb-1" style="width:48px;height:48px;object-fit:cover">
-                                    <strong class="d-block text-truncate">{{ $p->product_name }}</strong>
-                                    <span class="text-success fw-bold">{{ number_format($p->price, 0) }}</span>
-                                </button>
-                            </div>
-                        @endforeach
+        <div class="row g-3 pos-layout align-items-start">
+            {{-- Products + categories: main area --}}
+            <div class="col-12 col-lg-8 col-xl-8 pos-products-column">
+                <div class="pos-category-wrap mb-2 {{ $manyPosCategories ? 'pos-category-wrap--many' : '' }}">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="pos-category-label text-muted small text-uppercase fw-semibold d-none d-md-inline mb-0">{{ __('Categories') }}</span>
+                        @if ($manyPosCategories)
+                            <button type="button" class="btn btn-sm btn-primary w-100 w-md-auto ms-md-auto flex-shrink-0" data-bs-toggle="modal" data-bs-target="#posCategoriesModal">
+                                <i class="fas fa-th-large me-1"></i>{{ __('All categories') }}
+                                <span class="badge bg-light text-primary ms-1">{{ $posCatCount }}</span>
+                            </button>
+                        @endif
                     </div>
+                    <div class="pos-category-tabs-inner">
+                        <div class="pos-category-tabs nav nav-pills" role="tablist" id="posCategoryTabs">
+                            @foreach ($posCategories as $ci => $cat)
+                            <button type="button" class="nav-link d-flex align-items-center gap-2 {{ $ci === 0 ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#cat-{{ $cat->id }}">
+                                <span class="pos-cat-thumb"><img src="{{ \App\Support\MediaUrl::forCategory($cat) }}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('pos-cat-thumb--fallback')"></span>
+                                <span class="text-truncate" style="max-width: 10rem">{{ $cat->name }}</span>
+                            </button>
+                            @endforeach
+                        </div>
+                        @if ($manyPosCategories)
+                            <div class="pos-category-fade pos-category-fade--end" aria-hidden="true"></div>
+                        @endif
+                    </div>
+                    @if ($manyPosCategories)
+                        <p class="pos-category-scroll-hint small text-muted mb-0 mt-1">
+                            <i class="fas fa-hand-pointer me-1"></i>
+                            <span class="d-none d-md-inline">{{ __('Scroll inside the box to see more categories, or use') }} <strong>{{ __('All categories') }}</strong>.</span>
+                            <span class="d-md-none">{{ __('Swipe sideways for more, or tap') }} <strong>{{ __('All categories') }}</strong>.</span>
+                        </p>
+                    @endif
                 </div>
-                @php $ci++; @endphp
-            @endforeach
-        </div>
 
-        <div class="row g-3 mt-1 d-none d-lg-flex">
-            <div class="col-lg-5 ms-auto">
-                <div class="card shadow sticky-top" style="top:4.5rem;">
+                <div class="tab-content pos-tab-content">
+                    @foreach ($posCategories as $ci => $cat)
+                        <div class="tab-pane fade {{ $ci === 0 ? 'show active' : '' }}" id="cat-{{ $cat->id }}">
+                            <p class="text-muted small mb-2 d-none d-md-block">{{ __('Tap to add') }} · {{ $cat->products->count() }} {{ __('items') }}</p>
+                            <div class="pos-product-grid" role="list">
+                                @foreach ($cat->products as $p)
+                                    <button type="button" role="listitem"
+                                        class="pos-add pos-product-tile"
+                                        data-id="{{ $p->id }}" data-name="{{ e($p->product_name) }}" data-price="{{ $p->price }}">
+                                        <span class="pos-product-tile__media">
+                                            <img src="{{ \App\Support\MediaUrl::forProduct($p) }}" alt="" loading="lazy" onerror="this.style.visibility='hidden'; this.parentElement.classList.add('pos-product-tile__media--empty')">
+                                            <span class="pos-product-tile__ph" aria-hidden="true"><i class="fas fa-image"></i></span>
+                                        </span>
+                                        <span class="pos-product-tile__name">{{ $p->product_name }}</span>
+                                        <span class="pos-product-tile__price">{{ number_format($p->price, 0) }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Cart: fixed column on desktop --}}
+            <div class="col-lg-4 col-xl-4 d-none d-lg-block pos-cart-column">
+                <div class="card shadow-sm border-0 pos-cart-sticky">
                     @include('pos._cart_panel', ['idSuffix' => ''])
                 </div>
             </div>
@@ -86,6 +116,33 @@
 
         <div id="items-json"></div>
     </form>
+
+    @if ($manyPosCategories)
+    <div class="modal fade" id="posCategoriesModal" tabindex="-1" aria-labelledby="posCategoriesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header py-2">
+                    <h5 class="modal-title" id="posCategoriesModalLabel"><i class="fas fa-layer-group me-2"></i>{{ __('All categories') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">{{ __('Tap a category to show its products.') }}</p>
+                    <div class="row g-2">
+                        @foreach ($posCategories as $cat)
+                        <div class="col-6 col-sm-4 col-md-3">
+                            <button type="button" class="btn btn-outline-primary w-100 h-100 py-2 pos-cat-modal-pick text-start d-flex align-items-center gap-2" data-pos-tab-target="#cat-{{ $cat->id }}">
+                                <span class="pos-cat-thumb flex-shrink-0"><img src="{{ \App\Support\MediaUrl::forCategory($cat) }}" alt="" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('pos-cat-thumb--fallback')"></span>
+                                <span class="text-truncate">{{ $cat->name }}</span>
+                                <span class="badge bg-secondary ms-auto flex-shrink-0">{{ $cat->products->count() }}</span>
+                            </button>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <div class="pos-mobile-bar d-lg-none">
         <div>
@@ -210,6 +267,41 @@
         }
     });
     render();
+
+    @if ($manyPosCategories)
+    (function () {
+        var modal = document.getElementById('posCategoriesModal');
+        document.querySelectorAll('.pos-cat-modal-pick').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var target = btn.getAttribute('data-pos-tab-target');
+                var pill = document.querySelector('#posCategoryTabs button[data-bs-target="' + target + '"]');
+                if (pill && typeof bootstrap !== 'undefined') {
+                    bootstrap.Tab.getOrCreateInstance(pill).show();
+                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+                if (modal && typeof bootstrap !== 'undefined') {
+                    var m = bootstrap.Modal.getInstance(modal);
+                    if (m) m.hide();
+                }
+            });
+        });
+        var inner = document.querySelector('.pos-category-tabs-inner');
+        var fade = document.querySelector('.pos-category-fade--end');
+        var tabs = document.getElementById('posCategoryTabs');
+        function updateFade() {
+            if (!inner || !fade || !tabs) return;
+            var el = tabs;
+            var over = el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2;
+            var atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 && el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+            fade.classList.toggle('is-hidden', !over || atEnd);
+        }
+        if (tabs) {
+            tabs.addEventListener('scroll', updateFade);
+            window.addEventListener('resize', updateFade);
+            updateFade();
+        }
+    })();
+    @endif
 })();
 </script>
 @endpush
