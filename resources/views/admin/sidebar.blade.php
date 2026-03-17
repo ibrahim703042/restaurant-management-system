@@ -66,6 +66,11 @@
         @can('ops.stores.manage')
         <a class="nav-link" href="{{ route('stores.index') }}"><i class="fas fa-store nav-icon-width"></i> Stores</a>
         @endcan
+        @can('ops.dining_zones.manage')
+        @if($mod('module_dining_zones'))
+        <a class="nav-link" href="{{ route('dining-zones.index') }}"><i class="fas fa-map-marker-alt nav-icon-width"></i> Dining zones</a>
+        @endif
+        @endcan
         @can('ops.dining_tables.manage')
         <a class="nav-link" href="{{ route('tables.index') }}"><i class="fas fa-chair nav-icon-width"></i> Dining tables</a>
         @endcan

@@ -12,6 +12,7 @@ class InventoryStock extends Model
     protected $fillable = [
         'store_id',
         'product_id',
+        'unit_id',
         'quantity',
         'reorder_level',
     ];
@@ -29,5 +30,10 @@ class InventoryStock extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 }

@@ -17,17 +17,11 @@
         @cannot('hr.payroll.manage')
         <p class="text-muted small">You can view periods. Ask an admin to create new periods.</p>
         @endcannot
-        <div class="row g-2 mb-3">
-            <div class="col-md-4"><input type="search" class="form-control" id="filterSearch" placeholder="Search notes…"></div>
-            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary w-100" id="btnApply">Apply</button></div>
-        </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle">
+            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
                 <thead class="table-light"><tr><th>#</th><th>Start</th><th>End</th><th>Status</th><th>Notes</th></tr></thead>
-                <tbody id="tbody"></tbody>
             </table>
         </div>
-        <nav id="pagination" class="mt-2"></nav>
     </div>
 </div>
 @can('hr.payroll.manage')
@@ -53,43 +47,32 @@
 <script>
 (function () {
     const listUrl = @json(route('payroll.list'));
+    $('#dt-table').DataTable({
+        processing: true, serverSide: true, ajax: { url: listUrl },
+        columns: [
+            { data: 'id' }, { data: 'period_start' }, { data: 'period_end' }, { data: 'status' }, { data: 'notes' }
+        ],
+        order: [[0, 'desc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+    });
+    @can('hr.payroll.manage')
     const storeUrl = @json(route('payroll.store'));
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
-    const canManage = @json(auth()->user()->can('hr.payroll.manage'));
-    let page = 1;
-    const tbody = document.getElementById('tbody'), pagination = document.getElementById('pagination');
-    const modal = canManage ? new bootstrap.Modal(document.getElementById('modal')) : null;
+    const modal = new bootstrap.Modal(document.getElementById('modal'));
     const form = document.getElementById('form');
-    function loadList(p = 1) {
-        page = p;
-        fetch(listUrl + '?' + new URLSearchParams({ page, search: document.getElementById('filterSearch').value }), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(r => r.json()).then(d => {
-                tbody.innerHTML = '';
-                d.data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${row.id}</td><td>${row.period_start||''}</td><td>${row.period_end||''}</td><td>${escapeHtml(row.status||'')}</td><td>${escapeHtml((row.notes||'').substring(0,80))}</td>`;
-                    tbody.appendChild(tr);
-                });
-                let h = '<ul class="pagination pagination-sm mb-0">';
-                for (let i = 1; i <= d.last_page; i++) h += `<li class="page-item ${i===d.current_page?'active':''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
-                pagination.innerHTML = d.last_page > 1 ? h : '';
-                pagination.querySelectorAll('[data-page]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); loadList(+a.dataset.page); }));
+    document.getElementById('btnAdd').addEventListener('click', function () {
+        form.reset(); document.getElementById('formErrors').classList.add('d-none'); modal.show();
+    });
+    form.addEventListener('submit', function (ev) {
+        ev.preventDefault(); var err = document.getElementById('formErrors'); err.classList.add('d-none');
+        var fd = new FormData(form);
+        fetch(storeUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
+            .then(async function (r) { var j = await r.json().catch(function () { return {}; });
+                if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : j.message; err.classList.remove('d-none'); return; }
+                modal.hide(); Swal.fire({ icon: 'success', title: j.message || 'Created', timer: 1500, showConfirmButton: false });
+                $('#dt-table').DataTable().ajax.reload(null, false);
             });
-    }
-    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-    document.getElementById('btnApply').addEventListener('click', () => loadList(1));
-    if (canManage && document.getElementById('btnAdd')) {
-        document.getElementById('btnAdd').addEventListener('click', () => { form.reset(); document.getElementById('formErrors').classList.add('d-none'); modal.show(); });
-        form.addEventListener('submit', ev => {
-            ev.preventDefault(); const err = document.getElementById('formErrors'); err.classList.add('d-none');
-            fetch(storeUrl, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
-                .then(async r => { const j = await r.json().catch(() => ({}));
-                    if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : j.message; err.classList.remove('d-none'); return; }
-                    modal.hide(); Swal.fire({ icon: 'success', title: j.message||'Created', timer: 1500, showConfirmButton: false }); loadList(1);
-                });
-        });
-    }
-    loadList(1);
+    });
+    @endcan
 })();
 </script>
 @endpush

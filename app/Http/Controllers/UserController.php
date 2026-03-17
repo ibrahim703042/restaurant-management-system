@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Store;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -21,47 +24,47 @@ class UserController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'last_name']);
 
-        return view('users.manage', compact('roles', 'employeesWithoutLogin'));
+        $stores = Store::query()->where('status', 1)->orderBy('name')->get(['id', 'name', 'code']);
+
+        return view('users.manage', compact('roles', 'employeesWithoutLogin', 'stores'));
     }
 
     public function listJson(Request $request): JsonResponse
     {
-        $q = User::query()
-            ->with(['employee:id,first_name,last_name,user_id'])
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $s = '%'.$request->search.'%';
-                $query->where(function ($q2) use ($s) {
+        return $this->dataTablesOf(
+            User::query()->with(['employee:id,first_name,last_name,user_id']),
+            $request,
+            function (Builder $q, string $term) {
+                $s = '%'.addcslashes($term, '%_\\').'%';
+                $q->where(function ($q2) use ($s) {
                     $q2->where('name', 'like', $s)->orWhere('email', 'like', $s);
                 });
-            });
+            },
+            fn (Builder $q) => $q->orderBy('name'),
+            function (User $u) {
+                $role = e($u->getRoleNames()->first() ?? '—');
+                $en = $u->employee
+                    ? e($u->employee->first_name.' '.$u->employee->last_name)
+                    : '—';
 
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderBy('name')->paginate($perPage);
-        $rows = $paginated->getCollection()->map(function (User $u) {
-            return [
-                'id' => $u->id,
-                'name' => $u->name,
-                'email' => $u->email,
-                'role_names' => $u->getRoleNames()->values()->all(),
-                'employee' => $u->employee ? [
-                    'id' => $u->employee->id,
-                    'first_name' => $u->employee->first_name,
-                    'last_name' => $u->employee->last_name,
-                ] : null,
-            ];
-        })->values();
-
-        return response()->json([
-            'data' => $rows,
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+                return [
+                    'id' => $u->id,
+                    'name' => e($u->name),
+                    'email' => e($u->email),
+                    'role' => $role,
+                    'employee' => $en,
+                    'actions' => $u->id === auth()->id()
+                        ? '<span class="text-muted small">You</span>'
+                        : '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$u->id.'">Edit</button> '
+                            .'<button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="'.$u->id.'">Delete</button>',
+                ];
+            }
+        );
     }
 
     public function showJson(User $user): JsonResponse
     {
-        $user->load('employee:id,first_name,last_name,user_id');
+        $user->load(['employee:id,first_name,last_name,user_id', 'stores:id']);
 
         return response()->json([
             'user' => [
@@ -70,11 +73,12 @@ class UserController extends Controller
                 'email' => $user->email,
                 'role' => $user->getRoleNames()->first(),
                 'employee_id' => $user->employee?->id,
+                'store_ids' => $user->stores->pluck('id')->all(),
             ],
         ]);
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         if ($request->input('employee_id') === '' || $request->input('employee_id') === null) {
             $request->merge(['employee_id' => null]);
@@ -86,6 +90,8 @@ class UserController extends Controller
                 'password' => 'required|string|min:6|confirmed',
                 'role' => 'required|string|exists:roles,name',
                 'employee_id' => 'nullable|exists:employees,id',
+                'store_ids' => 'nullable|array',
+                'store_ids.*' => 'integer|exists:stores,id',
             ]);
         } catch (ValidationException $e) {
             return $this->jsonErr($request, $e->errors(), 422);
@@ -105,11 +111,12 @@ class UserController extends Controller
                 'can_access_app' => true,
             ]);
         }
+        $user->stores()->sync($data['store_ids'] ?? []);
 
         return $this->jsonOk($request, ['message' => 'User created.', 'user' => $user->load('employee')], redirect()->route('users.index')->with('status', 'User created.'));
     }
 
-    public function update(Request $request, User $user): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function update(Request $request, User $user): JsonResponse|RedirectResponse
     {
         if ($user->id === auth()->id()) {
             if ($request->wantsJson() || $request->ajax()) {
@@ -129,6 +136,8 @@ class UserController extends Controller
                 'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
                 'role' => 'required|string|exists:roles,name',
                 'employee_id' => 'nullable|exists:employees,id',
+                'store_ids' => 'nullable|array',
+                'store_ids.*' => 'integer|exists:stores,id',
             ];
             if ($request->filled('password')) {
                 $rules['password'] = 'required|string|min:6|confirmed';
@@ -153,11 +162,12 @@ class UserController extends Controller
             })->firstOrFail();
             $emp->update(['user_id' => $user->id, 'can_access_app' => true]);
         }
+        $user->stores()->sync($data['store_ids'] ?? []);
 
         return $this->jsonOk($request, ['message' => 'User updated.', 'user' => $user->fresh()->load('employee')], redirect()->route('users.index')->with('status', 'User updated.'));
     }
 
-    public function destroy(Request $request, User $user): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, User $user): JsonResponse|RedirectResponse
     {
         if ($user->id === auth()->id()) {
             if ($request->wantsJson() || $request->ajax()) {

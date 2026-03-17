@@ -1,24 +1,26 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\Auth\PasswordOtpController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\BillVerifyController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DebtController;
+use App\Http\Controllers\DiningZoneController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InventoryStockController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayrollPeriodController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\PositionController;
-use App\Http\Controllers\AuditLogController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +28,30 @@ Route::get('/', function () {
     return auth()->check() ? redirect()->route('admin.index') : view('auth.login');
 });
 
-Auth::routes();
+/** Serve branding images from /storage/*.png (project storage/, not public disk). */
+Route::get('/auth-media/{file}', function (string $file) {
+    $allowed = ['login.png', 'back-login.png'];
+    if (! in_array($file, $allowed, true)) {
+        abort(404);
+    }
+    $path = base_path('storage/'.$file);
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    return response()->file($path);
+})->where('file', '[a-z0-9.-]+')->name('auth.media');
+
+Auth::routes(['reset' => false]);
+
+Route::middleware('guest')->group(function () {
+    Route::get('password/reset', [PasswordOtpController::class, 'showRequestForm'])->name('password.request');
+    Route::post('password/email', [PasswordOtpController::class, 'sendOtp'])->name('password.email');
+    Route::get('password/reset/cancel', [PasswordOtpController::class, 'cancel'])->name('password.otp.cancel');
+    Route::get('password/reset/otp', [PasswordOtpController::class, 'showOtpForm'])->name('password.otp.show');
+    Route::post('password/reset/otp/resend', [PasswordOtpController::class, 'resendOtp'])->name('password.otp.resend');
+    Route::post('password/reset/otp', [PasswordOtpController::class, 'resetWithOtp'])->name('password.otp.update');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', fn () => redirect()->route('admin.index'))->name('home');
@@ -35,6 +60,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:sales.pos.use')->group(function () {
         Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+        Route::post('/pos/store', [PosController::class, 'setStore'])->name('pos.set-store');
         Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     });
 
@@ -109,6 +135,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/store/{store}/json', [StoreController::class, 'showJson'])->name('stores.showJson');
         Route::post('/store/{store}/update', [StoreController::class, 'update'])->name('stores.update');
         Route::delete('/store/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
+    });
+
+    Route::middleware('permission:ops.dining_zones.manage')->group(function () {
+        Route::get('/dining-zone/list', [DiningZoneController::class, 'listJson'])->name('dining-zones.list');
+        Route::get('/dining-zone', [DiningZoneController::class, 'index'])->name('dining-zones.index');
+        Route::post('/dining-zone', [DiningZoneController::class, 'store'])->name('dining-zones.store');
+        Route::get('/dining-zone/{dining_zone}/json', [DiningZoneController::class, 'showJson'])->name('dining-zones.showJson');
+        Route::post('/dining-zone/{dining_zone}/update', [DiningZoneController::class, 'update'])->name('dining-zones.update');
+        Route::delete('/dining-zone/{dining_zone}', [DiningZoneController::class, 'destroy'])->name('dining-zones.destroy');
     });
 
     Route::middleware('permission:ops.dining_tables.manage')->group(function () {

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Position;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -16,18 +18,20 @@ class PositionController extends Controller
 
     public function listJson(Request $request): JsonResponse
     {
-        $q = Position::query()
-            ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->search.'%'));
-
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderBy('title')->paginate($perPage);
-
-        return response()->json([
-            'data' => $paginated->items(),
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+        return $this->dataTablesOf(
+            Position::query(),
+            $request,
+            fn (Builder $q, string $term) => $q->where('title', 'like', '%'.addcslashes($term, '%_\\').'%'),
+            fn (Builder $q) => $q->orderBy('title'),
+            function (Position $row) {
+                return [
+                    'id' => $row->id,
+                    'title' => e($row->title),
+                    'actions' => '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'">Edit</button> '
+                        .'<button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="'.$row->id.'">Delete</button>',
+                ];
+            }
+        );
     }
 
     public function showJson(Position $position): JsonResponse
@@ -35,7 +39,7 @@ class PositionController extends Controller
         return response()->json(['position' => $position]);
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $data = $request->validate(['title' => 'required|string|max:255']);
@@ -48,7 +52,7 @@ class PositionController extends Controller
         return $this->jsonOk($request, ['message' => 'Position created.', 'position' => $position], redirect()->route('positions.index')->with('status', 'Position created.'));
     }
 
-    public function update(Request $request, Position $position): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function update(Request $request, Position $position): JsonResponse|RedirectResponse
     {
         try {
             $data = $request->validate(['title' => 'required|string|max:255']);
@@ -61,7 +65,7 @@ class PositionController extends Controller
         return $this->jsonOk($request, ['message' => 'Position updated.', 'position' => $position->fresh()], redirect()->route('positions.index')->with('status', 'Position updated.'));
     }
 
-    public function destroy(Request $request, Position $position): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, Position $position): JsonResponse|RedirectResponse
     {
         if ($position->employees()->exists()) {
             if ($request->wantsJson() || $request->ajax()) {

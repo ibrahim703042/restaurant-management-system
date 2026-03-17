@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -51,5 +53,25 @@ class User extends Authenticatable
     public function hasLinkedEmployee(): bool
     {
         return $this->employee()->exists();
+    }
+
+    /** Assigned branches. Empty = access all active stores. */
+    public function stores(): BelongsToMany
+    {
+        return $this->belongsToMany(Store::class, 'store_user');
+    }
+
+    /**
+     * @return Collection<int, Store>
+     */
+    public function accessibleStores()
+    {
+        $q = Store::query()->where('status', 1)->orderByDesc('is_primary_stock_location')->orderBy('name');
+        $ids = $this->stores()->pluck('id');
+        if ($ids->isEmpty()) {
+            return $q->get();
+        }
+
+        return $q->whereIn('id', $ids)->get();
     }
 }

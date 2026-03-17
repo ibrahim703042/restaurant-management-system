@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Position;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -20,28 +22,37 @@ class EmployeeController extends Controller
 
     public function listJson(Request $request): JsonResponse
     {
-        $q = Employee::query()
+        $base = Employee::query()
             ->with('position:id,title')
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $s = '%'.$request->search.'%';
-                $query->where(function ($q2) use ($s) {
+            ->when($request->filled('position_id'), fn ($query) => $query->where('position_id', $request->position_id));
+
+        return $this->dataTablesOf(
+            $base,
+            $request,
+            function (Builder $q, string $term) {
+                $s = '%'.addcslashes($term, '%_\\').'%';
+                $q->where(function ($q2) use ($s) {
                     $q2->where('first_name', 'like', $s)
                         ->orWhere('last_name', 'like', $s)
                         ->orWhere('email', 'like', $s)
                         ->orWhere('phone', 'like', $s);
                 });
-            })
-            ->when($request->filled('position_id'), fn ($query) => $query->where('position_id', $request->position_id));
+            },
+            fn (Builder $q) => $q->orderByDesc('id'),
+            function (Employee $row) {
+                $name = e(trim($row->first_name.' '.$row->last_name));
 
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderByDesc('id')->paginate($perPage);
-
-        return response()->json([
-            'data' => $paginated->items(),
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+                return [
+                    'id' => $row->id,
+                    'name' => $name,
+                    'email' => e((string) $row->email),
+                    'phone' => e((string) $row->phone),
+                    'position' => e($row->position->title ?? '—'),
+                    'actions' => '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'">Edit</button> '
+                        .'<button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="'.$row->id.'">Delete</button>',
+                ];
+            }
+        );
     }
 
     public function showJson(Employee $employee): JsonResponse
@@ -51,7 +62,7 @@ class EmployeeController extends Controller
         return response()->json(['employee' => $employee]);
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $data = $this->validatedEmployee($request, true, null);
@@ -76,7 +87,7 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('status', 'Employee created.');
     }
 
-    public function update(Request $request, Employee $employee): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function update(Request $request, Employee $employee): JsonResponse|RedirectResponse
     {
         try {
             $data = $this->validatedEmployee($request, false, $employee);
@@ -110,7 +121,7 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('status', 'Employee updated.');
     }
 
-    public function destroy(Request $request, Employee $employee): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, Employee $employee): JsonResponse|RedirectResponse
     {
         $employee->delete();
 

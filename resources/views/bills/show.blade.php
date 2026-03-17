@@ -8,8 +8,8 @@
             <div class="card"><div class="card-body">
                 <p><strong>Total:</strong> {{ number_format($bill->total, 0) }}</p>
                 <p><strong>Status:</strong> {{ $bill->payment_status }}</p>
-                <p class="small text-break"><strong>Verify URL:</strong><br><a href="{{ $bill->verifyUrl() }}">{{ $bill->verifyUrl() }}</a></p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($bill->verifyUrl()) }}" alt="QR" class="img-thumbnail">
+                <p class="small text-break"><strong>Verify URL:</strong><br><a href="{{ $verifyUrl }}">{{ $verifyUrl }}</a></p>
+                <div class="d-inline-block border rounded p-1 bg-white">{!! $qrSvg !!}</div>
                 <div class="mt-2">
                     <a href="{{ route('bills.print', $bill) }}" target="_blank" class="btn btn-secondary">Print receipt</a>
                 </div>

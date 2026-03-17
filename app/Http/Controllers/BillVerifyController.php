@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Bill;
 use App\Models\Client;
-use App\Models\Debt;
 use App\Models\Payment;
+use App\Support\QrCodeSvg;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -21,8 +21,10 @@ class BillVerifyController extends Controller
         $bill = Bill::query()->where('qr_token', $token)->with(['order.items.product', 'order.client', 'payments'])->firstOrFail();
 
         $clients = Client::orderBy('name')->get();
+        $verifyUrl = $bill->verifyUrl();
+        $qrSvg = QrCodeSvg::forData($verifyUrl, 200, 8);
 
-        return view('bills.verify', compact('bill', 'clients'));
+        return view('bills.verify', compact('bill', 'clients', 'verifyUrl', 'qrSvg'));
     }
 
     public function confirm(Request $request, string $token)
@@ -63,15 +65,10 @@ class BillVerifyController extends Controller
             ]);
 
             $bill->order->update(['client_id' => $clientId]);
-
-            $totalPaid = Payment::query()->where('bill_id', $bill->id)->sum('amount');
-            if ($totalPaid >= $bill->total) {
-                $bill->update(['payment_status' => 'paid']);
-                Debt::query()->where('bill_id', $bill->id)->update(['status' => 'settled', 'balance' => 0]);
-            } else {
-                $bill->update(['payment_status' => 'partial']);
-            }
         });
+
+        $bill->refresh()->load('order');
+        $bill->syncDebtsFromPayments();
 
         return redirect()->route('bills.verify', $token)->with('status', 'Payment recorded.');
     }

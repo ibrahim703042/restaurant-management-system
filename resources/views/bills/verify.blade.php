@@ -3,7 +3,9 @@
 <div class="container-fluid px-4" style="max-width:720px">
     <h1 class="mt-4">Verify bill</h1>
     @if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
-    <div class="card mb-3"><div class="card-body">
+    <div class="card mb-3"><div class="card-body text-center">
+        <div class="mb-3 d-inline-block" style="max-width:220px">{!! $qrSvg !!}</div>
+        <p class="small text-muted text-break mb-2">{{ $verifyUrl }}</p>
         <p><strong>{{ $bill->bill_number }}</strong> — Total {{ number_format($bill->total, 0) }} — {{ $bill->payment_status }}</p>
         <ul class="mb-0">
             @foreach ($bill->order->items as $line)

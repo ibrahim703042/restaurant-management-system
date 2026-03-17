@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\DiningTable;
+use App\Models\DiningZone;
 use App\Models\Store;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TableController extends Controller
@@ -13,31 +17,46 @@ class TableController extends Controller
     public function index()
     {
         $stores = Store::orderBy('name')->get(['id', 'name']);
+        $zones = DiningZone::query()->where('status', 1)->orderBy('store_id')->orderBy('sort_order')->orderBy('name')->get(['id', 'store_id', 'name']);
 
-        return view('tables.manage', compact('stores'));
+        return view('tables.manage', compact('stores', 'zones'));
     }
 
     public function listJson(Request $request): JsonResponse
     {
-        $q = DiningTable::query()
-            ->with('store:id,name')
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $s = '%'.$request->search.'%';
-                $query->where(function ($q2) use ($s) {
-                    $q2->where('table_name', 'like', $s)->orWhere('section', 'like', $s);
-                });
-            })
+        $base = DiningTable::query()
+            ->with(['store:id,name', 'zone:id,name'])
             ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id));
 
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderBy('sort_order')->orderBy('table_name')->paginate($perPage);
+        return $this->dataTablesOf(
+            $base,
+            $request,
+            function (Builder $q, string $term) {
+                $s = '%'.addcslashes($term, '%_\\').'%';
+                $q->where(function ($q2) use ($s) {
+                    $q2->where('table_name', 'like', $s)->orWhere('section', 'like', $s);
+                });
+            },
+            fn (Builder $q) => $q->orderBy('sort_order')->orderBy('table_name'),
+            function (DiningTable $row) {
+                $st = (int) $row->status === 1
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Off</span>';
 
-        return response()->json([
-            'data' => $paginated->items(),
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+                return [
+                    'id' => $row->id,
+                    'table_name' => e($row->table_name),
+                    'store' => e($row->store->name ?? '—'),
+                    'zone' => e($row->zone->name ?? '—'),
+                    'section' => e((string) $row->section),
+                    'capacity' => (int) $row->capacity,
+                    'sort_order' => (int) $row->sort_order,
+                    'status_html' => $st,
+                    'actions' => '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'">Edit</button> '
+                        .'<button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="'.$row->id.'">Delete</button>',
+                ];
+            }
+        );
     }
 
     public function showJson(DiningTable $dining_table): JsonResponse
@@ -47,7 +66,7 @@ class TableController extends Controller
         return response()->json(['table' => $dining_table]);
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $request->validate([
@@ -55,6 +74,7 @@ class TableController extends Controller
                 'capacity' => 'required|string|max:32',
                 'status' => 'required|integer',
                 'store_id' => 'required|exists:stores,id',
+                'zone_id' => ['nullable', Rule::exists('dining_zones', 'id')->where('store_id', $request->store_id)],
                 'section' => 'nullable|string|max:64',
                 'sort_order' => 'nullable|integer|min:0',
             ]);
@@ -65,17 +85,18 @@ class TableController extends Controller
         $table = DiningTable::create([
             'table_name' => $request->name,
             'section' => $request->section,
+            'zone_id' => $request->zone_id ?: null,
             'sort_order' => (int) ($request->sort_order ?? 0),
             'capacity' => $request->capacity,
             'status' => $request->status,
             'store_id' => $request->store_id,
         ]);
-        $table->load('store:id,name');
+        $table->load(['store:id,name', 'zone:id,name']);
 
         return $this->jsonOk($request, ['message' => 'Table created.', 'table' => $table], redirect()->route('tables.index')->with('status', 'Table created.'));
     }
 
-    public function update(Request $request, DiningTable $dining_table): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function update(Request $request, DiningTable $dining_table): JsonResponse|RedirectResponse
     {
         try {
             $request->validate([
@@ -83,6 +104,7 @@ class TableController extends Controller
                 'capacity' => 'required|string|max:32',
                 'status' => 'required|integer',
                 'store_id' => 'required|exists:stores,id',
+                'zone_id' => ['nullable', Rule::exists('dining_zones', 'id')->where('store_id', $request->store_id)],
                 'section' => 'nullable|string|max:64',
                 'sort_order' => 'nullable|integer|min:0',
             ]);
@@ -93,16 +115,17 @@ class TableController extends Controller
         $dining_table->update([
             'table_name' => $request->name,
             'section' => $request->section,
+            'zone_id' => $request->zone_id ?: null,
             'sort_order' => (int) ($request->sort_order ?? 0),
             'capacity' => $request->capacity,
             'status' => $request->status,
             'store_id' => $request->store_id,
         ]);
 
-        return $this->jsonOk($request, ['message' => 'Table updated.', 'table' => $dining_table->fresh()->load('store:id,name')], redirect()->route('tables.index')->with('status', 'Table updated.'));
+        return $this->jsonOk($request, ['message' => 'Table updated.', 'table' => $dining_table->fresh()->load(['store:id,name', 'zone:id,name'])], redirect()->route('tables.index')->with('status', 'Table updated.'));
     }
 
-    public function destroy(Request $request, DiningTable $dining_table): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, DiningTable $dining_table): JsonResponse|RedirectResponse
     {
         $dining_table->delete();
 

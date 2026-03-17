@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\PayrollPeriod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PayrollPeriodController extends Controller
@@ -25,21 +28,24 @@ class PayrollPeriodController extends Controller
     {
         $this->authorizePermission('hr.payroll.view');
 
-        $q = PayrollPeriod::query()
-            ->when($request->filled('search'), fn ($query) => $query->where('notes', 'like', '%'.$request->search.'%'));
-
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderByDesc('period_start')->paginate($perPage);
-
-        return response()->json([
-            'data' => $paginated->items(),
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+        return $this->dataTablesOf(
+            PayrollPeriod::query(),
+            $request,
+            fn (Builder $q, string $term) => $q->where('notes', 'like', '%'.addcslashes($term, '%_\\').'%'),
+            fn (Builder $q) => $q->orderByDesc('period_start'),
+            function (PayrollPeriod $row) {
+                return [
+                    'id' => $row->id,
+                    'period_start' => e((string) $row->period_start),
+                    'period_end' => e((string) $row->period_end),
+                    'status' => e((string) $row->status),
+                    'notes' => e(Str::limit((string) $row->notes, 80)),
+                ];
+            }
+        );
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $this->authorizePermission('hr.payroll.manage');
 

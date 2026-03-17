@@ -12,17 +12,11 @@
         <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add user</button>
     </div>
     <div class="card-body">
-        <div class="row g-2 mb-3">
-            <div class="col-md-4"><input type="search" class="form-control" id="filterSearch" placeholder="Search name, email…"></div>
-            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary w-100" id="btnApply">Apply</button></div>
-        </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle">
-                <thead class="table-light"><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Employee</th><th style="width:160px">Actions</th></tr></thead>
-                <tbody id="tbody"></tbody>
+            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
+                <thead class="table-light"><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Employee</th><th style="width:180px">Actions</th></tr></thead>
             </table>
         </div>
-        <nav id="pagination" class="mt-2"></nav>
     </div>
 </div>
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
@@ -43,6 +37,10 @@
                         <div class="col-md-6"><label class="form-label">Link employee (optional)</label>
                             <select name="employee_id" id="selEmployee" class="form-select"><option value="">— None —</option></select>
                         </div>
+                        <div class="col-12"><label class="form-label">Stores (POS / API)</label>
+                            <select name="store_ids[]" id="selStores" class="form-select" multiple size="4">@foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }} ({{ $s->code }})</option>@endforeach</select>
+                            <p class="small text-muted mb-0">Leave empty = access <strong>all</strong> active stores.</p>
+                        </div>
                         <p class="small text-muted mb-0" id="editPwHint">Leave password blank to keep current.</p>
                     </div>
                 </div>
@@ -60,84 +58,71 @@
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
     const base = @json(url('/user'));
     const authId = {{ auth()->id() }};
-    let page = 1, editingId = null;
-    const tbody = document.getElementById('tbody'), pagination = document.getElementById('pagination');
+    let editingId = null;
     const modal = new bootstrap.Modal(document.getElementById('modal')), form = document.getElementById('form');
     const selEmployee = document.getElementById('selEmployee');
+    const selStores = document.getElementById('selStores');
+    function clearStores() { Array.from(selStores.options).forEach(function (o) { o.selected = false; }); }
+    function setStores(ids) { var s = new Set((ids || []).map(Number)); Array.from(selStores.options).forEach(function (o) { o.selected = s.has(+o.value); }); }
     function loadEmployees(userId) {
-        const url = userId ? (base + '/' + userId + '/employees-json') : (base + '/employees-json');
-        return fetch(url, { headers: { 'Accept': 'application/json' } }).then(r => r.json()).then(d => {
+        var url = userId ? (base + '/' + userId + '/employees-json') : (base + '/employees-json');
+        return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }).then(function (d) {
             selEmployee.innerHTML = '<option value="">— None —</option>';
-            (d.employees || []).forEach(e => {
-                const o = document.createElement('option');
+            (d.employees || []).forEach(function (e) {
+                var o = document.createElement('option');
                 o.value = e.id; o.textContent = e.first_name + ' ' + e.last_name; selEmployee.appendChild(o);
             });
         });
     }
-    function loadList(p = 1) {
-        page = p;
-        fetch(listUrl + '?' + new URLSearchParams({ page, search: document.getElementById('filterSearch').value }), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(r => r.json()).then(d => {
-                tbody.innerHTML = '';
-                d.data.forEach(row => {
-                    const role = (row.role_names && row.role_names[0]) ? row.role_names[0] : '—';
-                    const en = row.employee ? (row.employee.first_name + ' ' + row.employee.last_name) : '—';
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${row.id}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.email)}</td><td>${escapeHtml(role)}</td><td>${escapeHtml(en)}</td>
-                        <td>${row.id == authId ? '<span class="text-muted small">You</span>' : `<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="${row.id}">Edit</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="${row.id}">Delete</button>`}</td>`;
-                    tbody.appendChild(tr);
-                });
-                let h = '<ul class="pagination pagination-sm mb-0">';
-                for (let i = 1; i <= d.last_page; i++) h += `<li class="page-item ${i===d.current_page?'active':''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
-                pagination.innerHTML = d.last_page > 1 ? h : '';
-                pagination.querySelectorAll('[data-page]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); loadList(+a.dataset.page); }));
-                tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.id)));
-                tbody.querySelectorAll('.btn-del').forEach(b => b.addEventListener('click', () => doDel(b.dataset.id)));
-            });
-    }
-    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-    document.getElementById('btnApply').addEventListener('click', () => loadList(1));
-    document.getElementById('btnAdd').addEventListener('click', () => {
+    const dt = $('#dt-table').DataTable({
+        processing: true, serverSide: true, ajax: { url: listUrl },
+        columns: [
+            { data: 'id' }, { data: 'name' }, { data: 'email' }, { data: 'role' }, { data: 'employee' },
+            { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
+        ],
+        order: [[1, 'asc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+    });
+    $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
+    $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });
+    document.getElementById('btnAdd').addEventListener('click', function () {
         editingId = null; document.getElementById('modalTitle').textContent = 'Add user'; form.reset();
         document.getElementById('pwWrap1').classList.remove('d-none'); document.getElementById('pwWrap2').classList.remove('d-none');
         document.getElementById('inpPassword').required = true; document.getElementById('editPwHint').classList.add('d-none');
         document.getElementById('formErrors').classList.add('d-none');
-        loadEmployees(null).then(() => modal.show());
+        clearStores(); loadEmployees(null).then(function () { modal.show(); });
     });
     function openEdit(id) {
         editingId = id; document.getElementById('modalTitle').textContent = 'Edit user';
         document.getElementById('inpPassword').required = false; document.getElementById('editPwHint').classList.remove('d-none');
         document.getElementById('formErrors').classList.add('d-none');
-        Promise.all([fetch(base + '/' + id + '/json').then(r => r.json()), loadEmployees(id)]).then(([data]) => {
-            const u = data.user;
+        Promise.all([fetch(base + '/' + id + '/json').then(function (r) { return r.json(); }), loadEmployees(id)]).then(function (arr) {
+            var u = arr[0].user;
             form.name.value = u.name; form.email.value = u.email; form.role.value = u.role || ''; form.password.value = ''; form.password_confirmation.value = '';
-            selEmployee.value = u.employee_id || ''; modal.show();
+            selEmployee.value = u.employee_id || ''; setStores(u.store_ids); modal.show();
         });
     }
-    form.addEventListener('submit', ev => {
-        ev.preventDefault(); const err = document.getElementById('formErrors'); err.classList.add('d-none');
-        const fd = new FormData(form);
+    form.addEventListener('submit', function (ev) {
+        ev.preventDefault(); var err = document.getElementById('formErrors'); err.classList.add('d-none');
+        var fd = new FormData(form);
         if (editingId) fd.append('_method', 'PUT');
-        const url = editingId ? base + '/' + editingId : storeUrl;
+        var url = editingId ? base + '/' + editingId : storeUrl;
         if (editingId && !fd.get('password')) { fd.delete('password'); fd.delete('password_confirmation'); }
         fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
-            .then(async r => { const j = await r.json().catch(() => ({}));
+            .then(async function (r) { var j = await r.json().catch(function () { return {}; });
                 if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : j.message; err.classList.remove('d-none'); return; }
-                modal.hide(); Swal.fire({ icon: 'success', title: j.message||'Saved', timer: 1500, showConfirmButton: false }); loadList(page);
+                modal.hide(); Swal.fire({ icon: 'success', title: j.message || 'Saved', timer: 1500, showConfirmButton: false }); dt.ajax.reload(null, false);
             });
     });
     function doDel(id) {
         Swal.fire({ title: 'Delete user?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Delete' })
-            .then(res => { if (!res.isConfirmed) return;
+            .then(function (res) { if (!res.isConfirmed) return;
                 fetch(base + '/' + id, { method: 'DELETE', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(async r => { const j = await r.json().catch(() => ({}));
-                        if (!r.ok) { Swal.fire('Error', j.message||'Error', 'error'); return; }
-                        Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); loadList(page);
+                    .then(async function (r) { var j = await r.json().catch(function () { return {}; });
+                        if (!r.ok) { Swal.fire('Error', j.message || 'Error', 'error'); return; }
+                        Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
                     });
             });
     }
-    loadList(1);
 })();
 </script>
 @endpush

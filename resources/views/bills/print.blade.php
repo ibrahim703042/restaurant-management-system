@@ -13,7 +13,8 @@
 <hr>
 <p style="text-align:right"><strong>Total {{ number_format($bill->total, 0) }}</strong></p>
 <p>Client: {{ $bill->order->client?->name ?? 'Walk-in' }}</p>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($bill->verifyUrl()) }}" alt="QR">
-<p class="small">Scan to verify</p>
+<div style="text-align:center;margin:8px 0">{!! $qrSvg !!}</div>
+<p class="small" style="word-break:break-all;font-size:10px">{{ $verifyUrl }}</p>
+<p class="small">Scan to verify / pay</p>
 <script>window.onload=function(){window.print();}</script>
 </body></html>

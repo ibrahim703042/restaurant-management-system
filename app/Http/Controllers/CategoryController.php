@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Media;
+use App\Support\MediaUrl;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -16,19 +20,30 @@ class CategoryController extends Controller
 
     public function listJson(Request $request): JsonResponse
     {
-        $q = Category::query()
-            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->search.'%'))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status));
+        $base = Category::query()
+            ->when($request->filled('status') && $request->status !== '', fn ($q) => $q->where('status', $request->status));
 
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderBy('name')->paginate($perPage);
+        return $this->dataTablesOf(
+            $base,
+            $request,
+            fn (Builder $q, string $term) => $q->where('name', 'like', '%'.addcslashes($term, '%_\\').'%'),
+            fn (Builder $q) => $q->orderBy('name'),
+            function (Category $row) {
+                $img = '<img src="'.e(MediaUrl::forCategory($row)).'" width="36" height="36" class="rounded object-fit-cover" alt="">';
+                $st = $row->status == 1
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>';
 
-        return response()->json([
-            'data' => $paginated->items(),
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+                return [
+                    'id' => $row->id,
+                    'image_html' => $img,
+                    'name' => e($row->name),
+                    'status_html' => $st,
+                    'actions' => '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'">Edit</button> '
+                        .'<button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="'.$row->id.'">Delete</button>',
+                ];
+            }
+        );
     }
 
     public function showJson(Category $category): JsonResponse
@@ -36,39 +51,62 @@ class CategoryController extends Controller
         return response()->json(['category' => $category]);
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         try {
-            $data = $request->validate([
+            $request->validate([
                 'name' => 'required|string|max:255',
                 'status' => 'required|integer|in:0,1',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             ]);
         } catch (ValidationException $e) {
             return $this->jsonErr($request, $e->errors(), 422);
         }
 
+        $data = ['name' => $request->name, 'status' => $request->status];
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
         $cat = Category::create($data);
+        if (! empty($data['image'] ?? null)) {
+            Media::query()->updateOrCreate(
+                ['mediable_type' => Category::class, 'mediable_id' => $cat->id, 'collection' => 'image'],
+                ['disk' => 'public', 'path' => $data['image'], 'sort_order' => 0],
+            );
+        }
 
         return $this->jsonOk($request, ['message' => 'Category created.', 'category' => $cat], redirect()->route('categories.index')->with('status', 'Category created.'));
     }
 
-    public function update(Request $request, Category $category): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function update(Request $request, Category $category): JsonResponse|RedirectResponse
     {
         try {
-            $data = $request->validate([
+            $request->validate([
                 'name' => 'required|string|max:255',
                 'status' => 'required|integer|in:0,1',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
             ]);
         } catch (ValidationException $e) {
             return $this->jsonErr($request, $e->errors(), 422);
         }
 
-        $category->update($data);
+        $category->name = $request->name;
+        $category->status = $request->status;
+        if ($request->hasFile('image')) {
+            $category->image = $request->file('image')->store('categories', 'public');
+        }
+        $category->save();
+        if ($request->hasFile('image')) {
+            Media::query()->updateOrCreate(
+                ['mediable_type' => Category::class, 'mediable_id' => $category->id, 'collection' => 'image'],
+                ['disk' => 'public', 'path' => $category->image, 'sort_order' => 0],
+            );
+        }
 
         return $this->jsonOk($request, ['message' => 'Category updated.', 'category' => $category->fresh()], redirect()->route('categories.index')->with('status', 'Category updated.'));
     }
 
-    public function destroy(Request $request, Category $category): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, Category $category): JsonResponse|RedirectResponse
     {
         if ($category->products()->exists()) {
             if ($request->wantsJson() || $request->ajax()) {

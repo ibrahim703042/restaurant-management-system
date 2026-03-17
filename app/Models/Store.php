@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Store extends Model
 {
-    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    use HasFactory;
 
     protected $table = 'stores';
 
@@ -42,5 +43,10 @@ class Store extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class, 'store_id');
+    }
+
+    public function diningZones(): HasMany
+    {
+        return $this->hasMany(DiningZone::class, 'store_id');
     }
 }

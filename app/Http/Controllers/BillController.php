@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bill;
-use Illuminate\Http\Request;
+use App\Support\QrCodeSvg;
 
 class BillController extends Controller
 {
@@ -22,14 +22,18 @@ class BillController extends Controller
     public function show(Bill $bill)
     {
         $bill->load(['order.items.product', 'order.client', 'payments', 'debts']);
+        $verifyUrl = $bill->verifyUrl();
+        $qrSvg = QrCodeSvg::forData($verifyUrl, 180, 6);
 
-        return view('bills.show', compact('bill'));
+        return view('bills.show', compact('bill', 'verifyUrl', 'qrSvg'));
     }
 
     public function printView(Bill $bill)
     {
         $bill->load(['order.items.product', 'order.client']);
+        $verifyUrl = $bill->verifyUrl();
+        $qrSvg = QrCodeSvg::forData($verifyUrl, 140, 4);
 
-        return view('bills.print', compact('bill'));
+        return view('bills.print', compact('bill', 'verifyUrl', 'qrSvg'));
     }
 }

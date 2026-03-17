@@ -15,6 +15,7 @@ class DiningTable extends Model
     protected $fillable = [
         'table_name',
         'section',
+        'zone_id',
         'sort_order',
         'capacity',
         'status',
@@ -29,5 +30,10 @@ class DiningTable extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(DiningZone::class, 'zone_id');
     }
 }

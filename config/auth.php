@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -62,7 +64,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            'model' => User::class,
         ],
 
         // 'users' => [
@@ -107,5 +109,13 @@ return [
     */
 
     'password_timeout' => 10800,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password reset OTP (email code) expiry in minutes
+    |--------------------------------------------------------------------------
+    */
+
+    'password_otp_expire_minutes' => (int) env('PASSWORD_OTP_EXPIRES', 15),
 
 ];

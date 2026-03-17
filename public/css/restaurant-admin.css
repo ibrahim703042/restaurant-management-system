@@ -123,6 +123,16 @@ body.hold-transition {
   }
 }
 
+/* Desktop: when sidebar is collapsed, expand header + main content full width */
+@media (min-width: 992px) {
+  .sidebar-collapse .main-header.navbar {
+    margin-left: 0 !important;
+  }
+  .sidebar-collapse .content-wrapper {
+    margin-left: 0 !important;
+  }
+}
+
 .content-header {
   padding: 1rem 0;
   background: #fff;
@@ -191,4 +201,12 @@ body.hold-transition {
   background: transparent;
   border-bottom: 1px solid rgba(0, 0, 0, 0.125);
   font-weight: 600;
+}
+
+/* DataTables + Bootstrap 5 */
+table.dataTable thead th {
+  border-bottom: 1px solid #dee2e6 !important;
+}
+div.dataTables_wrapper div.dataTables_length select {
+  min-width: 4.5rem;
 }

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
@@ -21,23 +24,29 @@ class ClientController extends Controller
 
     public function listJson(Request $request): JsonResponse
     {
-        $q = Client::query()
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $s = '%'.$request->search.'%';
-                $query->where(function ($q2) use ($s) {
+        return $this->dataTablesOf(
+            Client::query(),
+            $request,
+            function (Builder $q, string $term) {
+                $s = '%'.addcslashes($term, '%_\\').'%';
+                $q->where(function ($q2) use ($s) {
                     $q2->where('name', 'like', $s)->orWhere('phone', 'like', $s)->orWhere('address', 'like', $s);
                 });
-            });
+            },
+            fn (Builder $q) => $q->orderByDesc('id'),
+            function (Client $row) {
+                $addr = e(Str::limit((string) $row->address, 60));
 
-        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
-        $paginated = $q->orderByDesc('id')->paginate($perPage);
-
-        return response()->json([
-            'data' => $paginated->items(),
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'total' => $paginated->total(),
-        ]);
+                return [
+                    'id' => $row->id,
+                    'name' => e($row->name),
+                    'phone' => e((string) $row->phone),
+                    'address' => $addr,
+                    'actions' => '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'">Edit</button> '
+                        .'<button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="'.$row->id.'">Delete</button>',
+                ];
+            }
+        );
     }
 
     public function showJson(Client $client): JsonResponse
@@ -45,7 +54,7 @@ class ClientController extends Controller
         return response()->json(['client' => $client]);
     }
 
-    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         try {
             $data = $request->validate([
@@ -62,7 +71,7 @@ class ClientController extends Controller
         return $this->jsonOk($request, ['message' => 'Client created.', 'client' => $client], redirect()->route('clients.index')->with('status', 'Client created.'));
     }
 
-    public function update(Request $request, Client $client): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function update(Request $request, Client $client): JsonResponse|RedirectResponse
     {
         try {
             $data = $request->validate([
@@ -79,7 +88,7 @@ class ClientController extends Controller
         return $this->jsonOk($request, ['message' => 'Client updated.', 'client' => $client->fresh()], redirect()->route('clients.index')->with('status', 'Client updated.'));
     }
 
-    public function destroy(Request $request, Client $client): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function destroy(Request $request, Client $client): JsonResponse|RedirectResponse
     {
         if ($client->orders()->exists()) {
             $msg = 'Client has orders and cannot be deleted.';

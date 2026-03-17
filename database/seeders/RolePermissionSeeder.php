@@ -31,6 +31,7 @@ class RolePermissionSeeder extends Seeder
             'ops.stores.view',
             'ops.dining_tables.manage',
             'ops.dining_tables.view',
+            'ops.dining_zones.manage',
             'ops.menu.categories.manage',
             'ops.menu.products.manage',
 
@@ -88,6 +89,7 @@ class RolePermissionSeeder extends Seeder
             ['key' => 'module_hr_payroll', 'group' => 'hr_payroll', 'value' => '1', 'active' => true],
             ['key' => 'module_hr_employees', 'group' => 'hr_payroll', 'value' => '1', 'active' => true],
             ['key' => 'module_inventory', 'group' => 'inventory', 'value' => '1', 'active' => true],
+            ['key' => 'module_dining_zones', 'group' => 'ops', 'value' => '1', 'active' => true],
         ];
         foreach ($moduleRows as $m) {
             Setting::query()->updateOrCreate(

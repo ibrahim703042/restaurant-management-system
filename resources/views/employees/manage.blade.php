@@ -14,24 +14,20 @@
         <button type="button" class="btn btn-primary" id="btnAddEmployee"><i class="fas fa-plus me-1"></i>Add employee</button>
     </div>
     <div class="card-body">
-        <div class="row g-2 mb-3">
+        <div class="row g-2 mb-3 align-items-end">
             <div class="col-md-4">
-                <input type="search" class="form-control" id="filterSearch" placeholder="Search name, email, phone…">
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" id="filterPosition">
+                <label class="form-label small mb-0">Position</label>
+                <select class="form-select form-select-sm" id="filterPosition">
                     <option value="">All positions</option>
                     @foreach ($positions as $p)
                     <option value="{{ $p->id }}">{{ $p->title }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-outline-secondary w-100" id="btnApplyFilter">Apply</button>
-            </div>
+            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApplyFilter">Apply filter</button></div>
         </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle">
+            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
                 <thead class="table-light">
                     <tr>
                         <th>#</th>
@@ -39,13 +35,11 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Position</th>
-                        <th style="width:140px">Actions</th>
+                        <th style="width:160px">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="employeeTableBody"></tbody>
             </table>
         </div>
-        <nav id="employeePagination" class="mt-2"></nav>
     </div>
 </div>
 
@@ -102,62 +96,21 @@
     const listUrl = @json(route('employees.list'));
     const storeUrl = @json(route('employees.store'));
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
-    let currentPage = 1;
     let editingId = null;
-
-    const tbody = document.getElementById('employeeTableBody');
-    const pagination = document.getElementById('employeePagination');
     const modal = new bootstrap.Modal(document.getElementById('employeeModal'));
     const form = document.getElementById('employeeForm');
-
-    function loadList(page = 1) {
-        currentPage = page;
-        const params = new URLSearchParams({
-            page,
-            search: document.getElementById('filterSearch').value,
-            position_id: document.getElementById('filterPosition').value,
-        });
-        fetch(listUrl + '?' + params, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(r => r.json())
-            .then(d => {
-                tbody.innerHTML = '';
-                (d.data || []).forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.id}</td>
-                        <td>${escapeHtml(row.first_name)} ${escapeHtml(row.last_name)}</td>
-                        <td>${escapeHtml(row.email)}</td>
-                        <td>${escapeHtml(row.phone || '')}</td>
-                        <td>${row.position ? escapeHtml(row.position.title) : '—'}</td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="${row.id}">Edit</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger btn-del" data-id="${row.id}">Delete</button>
-                        </td>`;
-                    tbody.appendChild(tr);
-                });
-                let pagHtml = '<ul class="pagination pagination-sm mb-0">';
-                for (let p = 1; p <= d.last_page; p++) {
-                    pagHtml += `<li class="page-item ${p === d.current_page ? 'active' : ''}"><a class="page-link" href="#" data-page="${p}">${p}</a></li>`;
-                }
-                pagHtml += '</ul>';
-                pagination.innerHTML = d.last_page > 1 ? pagHtml : '';
-                pagination.querySelectorAll('[data-page]').forEach(a => {
-                    a.addEventListener('click', e => { e.preventDefault(); loadList(+a.dataset.page); });
-                });
-                tbody.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => openEdit(btn.dataset.id)));
-                tbody.querySelectorAll('.btn-del').forEach(btn => btn.addEventListener('click', () => confirmDelete(btn.dataset.id)));
-            });
-    }
-
-    function escapeHtml(s) {
-        if (!s) return '';
-        const d = document.createElement('div');
-        d.textContent = s;
-        return d.innerHTML;
-    }
-
-    document.getElementById('btnApplyFilter').addEventListener('click', () => loadList(1));
-    document.getElementById('filterSearch').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); loadList(1); } });
+    const dt = $('#dt-table').DataTable({
+        processing: true, serverSide: true,
+        ajax: { url: listUrl, data: function (d) { d.position_id = document.getElementById('filterPosition').value; } },
+        columns: [
+            { data: 'id' }, { data: 'name' }, { data: 'email' }, { data: 'phone' }, { data: 'position' },
+            { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
+        ],
+        order: [[0, 'desc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+    });
+    document.getElementById('btnApplyFilter').addEventListener('click', function () { dt.ajax.reload(); });
+    $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
+    $('#dt-table tbody').on('click', '.btn-del', function () { confirmDelete($(this).data('id')); });
 
     document.getElementById('btnAddEmployee').addEventListener('click', () => {
         editingId = null;
@@ -215,7 +168,7 @@
                 }
                 modal.hide();
                 Swal.fire({ icon: 'success', title: j.message || 'Saved', timer: 1500, showConfirmButton: false });
-                loadList(currentPage);
+                dt.ajax.reload(null, false);
             });
     });
 
@@ -233,11 +186,9 @@
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
             })
                 .then(r => r.json())
-                .then(() => { Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); loadList(currentPage); });
+                .then(() => { Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false); });
         });
     }
-
-    loadList(1);
 })();
 </script>
 @endpush

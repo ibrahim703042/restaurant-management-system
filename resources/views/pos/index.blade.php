@@ -15,8 +15,19 @@
         </div>
     @endif
 
+    <form method="post" action="{{ route('pos.set-store') }}" class="mb-3 d-flex flex-wrap align-items-center gap-2 bg-light rounded p-2">
+        @csrf
+        <label class="form-label mb-0 fw-bold"><i class="fas fa-store me-1"></i>Magasin (stock)</label>
+        <select name="store_id" class="form-select form-select-sm" style="max-width:280px" onchange="this.form.submit()">
+            @foreach ($stores as $s)
+            <option value="{{ $s->id }}" @selected((int)$posStoreId === (int)$s->id)>{{ $s->name }}</option>
+            @endforeach
+        </select>
+    </form>
+
     <form action="{{ route('pos.checkout') }}" method="post" id="pos-form">
         @csrf
+        <input type="hidden" name="store_id" value="{{ $posStoreId }}">
         <input type="hidden" name="client_id" id="f_client_id" value="">
         <input type="hidden" name="payment_method" id="f_payment_method" value="cash">
         <input type="hidden" name="amount_paid" id="f_amount_paid" value="0">
@@ -25,7 +36,10 @@
             @php $ci = 0; @endphp
             @foreach ($categories as $cat)
                 @if ($cat->products->isEmpty()) @continue @endif
-                <button type="button" class="nav-link {{ $ci === 0 ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#cat-{{ $cat->id }}">{{ $cat->name }}</button>
+                <button type="button" class="nav-link d-flex align-items-center gap-2 {{ $ci === 0 ? 'active' : '' }}" data-bs-toggle="pill" data-bs-target="#cat-{{ $cat->id }}">
+                    <img src="{{ \App\Support\MediaUrl::forCategory($cat) }}" alt="" class="rounded-circle" style="width:28px;height:28px;object-fit:cover">
+                    {{ $cat->name }}
+                </button>
                 @php $ci++; @endphp
             @endforeach
         </div>
@@ -38,8 +52,9 @@
                     <div class="row g-2 g-md-3">
                         @foreach ($cat->products as $p)
                             <div class="col-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
-                                <button type="button" class="btn btn-outline-primary w-100 pos-add pos-product-btn"
+                                <button type="button" class="btn btn-outline-primary w-100 pos-add pos-product-btn text-center"
                                     data-id="{{ $p->id }}" data-name="{{ e($p->product_name) }}" data-price="{{ $p->price }}">
+                                    <img src="{{ \App\Support\MediaUrl::forProduct($p) }}" alt="" class="rounded mb-1" style="width:48px;height:48px;object-fit:cover">
                                     <strong class="d-block text-truncate">{{ $p->product_name }}</strong>
                                     <span class="text-success fw-bold">{{ number_format($p->price, 0) }}</span>
                                 </button>

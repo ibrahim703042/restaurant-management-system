@@ -16,20 +16,26 @@
     @else
     <div class="table-responsive card">
         <table class="table table-sm mb-0">
-            <thead><tr><th>Product</th><th>Qty</th><th>Reorder</th><th>Adjust</th></tr></thead>
+            <thead><tr><th>Product</th><th>Qty</th><th>Unit</th><th>Reorder</th><th>Adjust</th></tr></thead>
             <tbody>
                 @foreach ($stocks as $row)
                 <tr>
                     <td>{{ $row->product->product_name ?? '—' }}</td>
                     <td>{{ number_format($row->quantity, 2) }}</td>
+                    <td>{{ $row->unit->code ?? '—' }}</td>
                     <td>{{ number_format($row->reorder_level, 2) }}</td>
                     <td>
                         @can('inventory.stock.adjust')
-                        <form method="post" action="{{ route('inventory.adjust') }}" class="d-flex gap-1 flex-wrap">
+                        <form method="post" action="{{ route('inventory.adjust') }}" class="d-flex gap-1 flex-wrap align-items-center">
                             @csrf
                             <input type="hidden" name="store_id" value="{{ $storeId }}">
                             <input type="hidden" name="product_id" value="{{ $row->product_id }}">
                             <input type="number" step="0.001" name="delta" class="form-control form-control-sm" style="width:90px" placeholder="+/−" required>
+                            <select name="unit_id" class="form-select form-select-sm" style="width:100px">
+                                @foreach ($units as $u)
+                                <option value="{{ $u->id }}" @selected($row->unit_id == $u->id)>{{ $u->code }}</option>
+                                @endforeach
+                            </select>
                             <button class="btn btn-sm btn-primary">Apply</button>
                         </form>
                         @else

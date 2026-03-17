@@ -62,3 +62,15 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+## Restaurant app (demo data)
+
+- **Shared catalog:** Products can have `store_id` null (sold at all branches). Run `php artisan products:deduplicate` (use `--dry-run` first) after migrating old data.
+- **Bulk demo seed (~100+ rows):** After `migrate` and `AdminUserSeeder`, run  
+  `php artisan db:seed --class=BulkDemoSeeder`  
+  Creates demo stores `DEM-01`…`DEM-05`, categories, ~50 shared products, zones, tables, per-store inventory, clients, and sample orders/bills. Skips automatically if `DEM-01` already exists.
+- **Media:** Categories and products use a polymorphic `media` table (plus legacy `image` column). Missing files fall back to `storage/app/public/default.png` (run `php artisan storage:link`).
+- **User ↔ stores:** Assign stores under **Users** (multi-select). Empty = all branches for POS and `GET /api/user` (Sanctum). Otherwise only listed stores.
+- **API user:** `GET /api/user` returns `{ user, stores[], stores_restricted }`.
