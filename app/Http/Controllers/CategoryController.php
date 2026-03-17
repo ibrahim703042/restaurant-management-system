@@ -3,60 +3,99 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-
-        $categories = DB::table('categories')->get();
-        return view('pages.tables.categoryTable', compact('categories'));
+        return view('categories.manage');
     }
 
-    public function create()
+    public function listJson(Request $request): JsonResponse
     {
-        return view('pages.forms.category');
+        $q = Category::query()
+            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->search.'%'))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status));
+
+        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
+        $paginated = $q->orderBy('name')->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'total' => $paginated->total(),
+        ]);
     }
 
-    public function store(Request $request)
+    public function showJson(Category $category): JsonResponse
     {
-		$categoryData = [
-        'name' => $request->name,
-        'status' => $request->status];
-
-		category::create($categoryData);
-
-        return redirect()->route('categories.index')->with('status', 'Category Created Successfully');
-
+        return response()->json(['category' => $category]);
     }
 
-    public function show()
+    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        //
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'status' => 'required|integer|in:0,1',
+            ]);
+        } catch (ValidationException $e) {
+            return $this->jsonErr($request, $e->errors(), 422);
+        }
+
+        $cat = Category::create($data);
+
+        return $this->jsonOk($request, ['message' => 'Category created.', 'category' => $cat], redirect()->route('categories.index')->with('status', 'Category created.'));
     }
 
-    public function edit($id)
+    public function update(Request $request, Category $category): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $category = category::find($id);
-        return view('pages\forms\edit_category', compact('category'));
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'status' => 'required|integer|in:0,1',
+            ]);
+        } catch (ValidationException $e) {
+            return $this->jsonErr($request, $e->errors(), 422);
+        }
+
+        $category->update($data);
+
+        return $this->jsonOk($request, ['message' => 'Category updated.', 'category' => $category->fresh()], redirect()->route('categories.index')->with('status', 'Category updated.'));
     }
 
-    public function update(Request $request, $id)
+    public function destroy(Request $request, Category $category): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $category = category::find($id);
-        $category->name = $request->input('name');
-        $category->status = $request->input('status');
-        $category->update();
+        if ($category->products()->exists()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Category has products.', 'errors' => ['category' => ['Remove products first.']]], 422);
+            }
 
-        return redirect()->route('categories.index')->with('status','Category Updated Successfully');
-    }
-
-    public function destroy($id)
-    {
-        $category = category::find($id);
+            return back()->withErrors(['delete' => 'Category has products.']);
+        }
         $category->delete();
-        return redirect()->back()->with('status','Category Deleted Successfully');
+
+        return $this->jsonOk($request, ['message' => 'Category removed.'], redirect()->route('categories.index')->with('status', 'Category removed.'));
+    }
+
+    private function jsonOk(Request $request, array $json, $redirect)
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($json);
+        }
+
+        return $redirect;
+    }
+
+    private function jsonErr(Request $request, array $errors, int $code): JsonResponse
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $errors], $code);
+        }
+        throw ValidationException::withMessages($errors);
     }
 }

@@ -6,7 +6,7 @@ use App\Http\Controllers\BillVerifyController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DebtController;
-use App\Http\Controllers\employeeController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InventoryStockController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
@@ -18,6 +18,7 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\AuditLogController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -38,10 +39,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('permission:sales.clients.manage')->group(function () {
+        Route::get('/clients/list', [ClientController::class, 'listJson'])->name('clients.list');
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
-        Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
         Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
-        Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
+        Route::get('/clients/{client}/json', [ClientController::class, 'showJson'])->name('clients.showJson');
         Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
         Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
     });
@@ -70,64 +71,71 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('permission:admin.settings.manage');
     Route::put('/settings/{setting}', [SettingsController::class, 'update'])->name('settings.update')->middleware('permission:admin.settings.manage');
 
+    Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
+
     Route::middleware('permission:admin.users.manage')->group(function () {
+        Route::get('/user/list', [UserController::class, 'listJson'])->name('users.list');
+        Route::get('/user/employees-json', [UserController::class, 'employeesAvailableJson'])->name('users.employees.available');
         Route::get('/user', [UserController::class, 'index'])->name('users.index');
-        Route::get('/create/user', [UserController::class, 'create'])->name('user.create');
         Route::post('/user', [UserController::class, 'store'])->name('users.store');
+        Route::get('/user/{user}/json', [UserController::class, 'showJson'])->name('users.showJson');
+        Route::get('/user/{user}/employees-json', [UserController::class, 'employeesForEditJson'])->name('users.employees.edit');
+        Route::put('/user/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/user/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
     Route::middleware('permission:hr.positions.manage')->group(function () {
+        Route::get('/position/list', [PositionController::class, 'listJson'])->name('positions.list');
         Route::get('/position', [PositionController::class, 'index'])->name('positions.index');
-        Route::get('/create/position', [PositionController::class, 'create'])->name('position.create');
-        Route::post('/add-position', [PositionController::class, 'position'])->name('position.store');
-        Route::get('/edit-position/{id}', [PositionController::class, 'edit']);
-        Route::put('/update-position/{id}', [PositionController::class, 'update']);
-        Route::get('/delete-position/{id}', [PositionController::class, 'destroy']);
+        Route::post('/position', [PositionController::class, 'store'])->name('positions.store');
+        Route::get('/position/{position}/json', [PositionController::class, 'showJson'])->name('positions.showJson');
+        Route::post('/position/{position}/update', [PositionController::class, 'update'])->name('positions.update');
+        Route::delete('/position/{position}', [PositionController::class, 'destroy'])->name('positions.destroy');
     });
 
     Route::middleware('permission:hr.employees.manage')->group(function () {
-        Route::get('/employee', [employeeController::class, 'index'])->name('employees.index');
-        Route::get('/create/employee', [employeeController::class, 'create'])->name('employee.create');
-        Route::post('/add-employee', [employeeController::class, 'store'])->name('employee.store');
-        Route::get('/edit-employee/{id}', [employeeController::class, 'edit']);
-        Route::put('/update-employee/{id}', [employeeController::class, 'update']);
-        Route::get('/delete-employee/{id}', [employeeController::class, 'destroy']);
+        Route::get('/employee/list', [EmployeeController::class, 'listJson'])->name('employees.list');
+        Route::get('/employee', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::post('/employee', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::get('/employee/{employee}/json', [EmployeeController::class, 'showJson'])->name('employees.showJson');
+        Route::post('/employee/{employee}/update', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('/employee/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
     });
 
     Route::middleware('permission:ops.stores.manage')->group(function () {
+        Route::get('/store/list', [StoreController::class, 'listJson'])->name('stores.list');
         Route::get('/store', [StoreController::class, 'index'])->name('stores.index');
-        Route::get('/create/store', [StoreController::class, 'create'])->name('store.create');
-        Route::post('/add-store', [StoreController::class, 'store'])->name('store.store');
-        Route::get('/edit-store/{id}', [StoreController::class, 'edit']);
-        Route::put('/update-store/{id}', [StoreController::class, 'update']);
-        Route::get('/delete-store/{id}', [StoreController::class, 'destroy']);
+        Route::post('/store', [StoreController::class, 'store'])->name('stores.store');
+        Route::get('/store/{store}/json', [StoreController::class, 'showJson'])->name('stores.showJson');
+        Route::post('/store/{store}/update', [StoreController::class, 'update'])->name('stores.update');
+        Route::delete('/store/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
     });
 
     Route::middleware('permission:ops.dining_tables.manage')->group(function () {
+        Route::get('/table/list', [TableController::class, 'listJson'])->name('tables.list');
         Route::get('/table', [TableController::class, 'index'])->name('tables.index');
-        Route::get('/create/table', [TableController::class, 'create'])->name('table.create');
-        Route::post('/add-table', [TableController::class, 'store'])->name('table.store');
-        Route::get('/edit-table/{id}', [TableController::class, 'edit']);
-        Route::put('/update-table/{id}', [TableController::class, 'update']);
-        Route::get('/delete-table/{id}', [TableController::class, 'destroy']);
+        Route::post('/table', [TableController::class, 'store'])->name('tables.store');
+        Route::get('/table/{dining_table}/json', [TableController::class, 'showJson'])->name('tables.showJson');
+        Route::post('/table/{dining_table}/update', [TableController::class, 'update'])->name('tables.update');
+        Route::delete('/table/{dining_table}', [TableController::class, 'destroy'])->name('tables.destroy');
     });
 
     Route::middleware('permission:ops.menu.categories.manage')->group(function () {
+        Route::get('/category/list', [CategoryController::class, 'listJson'])->name('categories.list');
         Route::get('/category', [CategoryController::class, 'index'])->name('categories.index');
-        Route::get('/create/category', [CategoryController::class, 'create'])->name('category.create');
-        Route::post('/add-category', [CategoryController::class, 'store'])->name('category.store');
-        Route::get('/edit-category/{id}', [CategoryController::class, 'edit']);
-        Route::put('/update-category/{id}', [CategoryController::class, 'update']);
-        Route::get('/delete-category/{id}', [CategoryController::class, 'destroy']);
+        Route::post('/category', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('/category/{category}/json', [CategoryController::class, 'showJson'])->name('categories.showJson');
+        Route::post('/category/{category}/update', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/category/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     });
 
     Route::middleware('permission:ops.menu.products.manage')->group(function () {
+        Route::get('/product/list', [ProductController::class, 'listJson'])->name('products.list');
         Route::get('/product', [ProductController::class, 'index'])->name('products.index');
-        Route::get('/create/product', [ProductController::class, 'create'])->name('product.create');
-        Route::post('/add-product', [ProductController::class, 'store'])->name('product.store');
-        Route::get('/edit-product/{id}', [ProductController::class, 'edit']);
-        Route::put('/update-product/{id}', [ProductController::class, 'update']);
-        Route::get('/delete-product/{id}', [ProductController::class, 'destroy']);
+        Route::post('/product', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/product/{product}/json', [ProductController::class, 'showJson'])->name('products.showJson');
+        Route::post('/product/{product}/update', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     });
 
     Route::middleware('permission:inventory.stock.view')->group(function () {
@@ -136,10 +144,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/inventory/adjust', [InventoryStockController::class, 'adjust'])->name('inventory.adjust')->middleware('permission:inventory.stock.adjust');
 
     Route::middleware('permission:hr.payroll.view')->group(function () {
+        Route::get('/payroll/list', [PayrollPeriodController::class, 'listJson'])->name('payroll.list');
         Route::get('/payroll', [PayrollPeriodController::class, 'index'])->name('payroll.index');
     });
-    Route::middleware('permission:hr.payroll.manage')->group(function () {
-        Route::get('/payroll/create', [PayrollPeriodController::class, 'create'])->name('payroll.create');
-        Route::post('/payroll', [PayrollPeriodController::class, 'store'])->name('payroll.store');
-    });
+    Route::post('/payroll', [PayrollPeriodController::class, 'store'])->name('payroll.store')->middleware('permission:hr.payroll.manage');
 });

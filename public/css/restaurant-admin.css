@@ -1,0 +1,194 @@
+/**
+ * AdminLTE-inspired shell (Bootstrap 5.3 compatible).
+ * Reference: https://adminlte.io/themes/v3/
+ */
+:root {
+  --lte-sidebar-bg: #343a40;
+  --lte-sidebar-hover: #494e53;
+  --lte-brand: #3c8dbc;
+  --lte-content-bg: #f4f6f9;
+  --lte-header-border: #dee2e6;
+}
+
+body.hold-transition {
+  overflow-x: hidden;
+}
+
+.wrapper {
+  min-height: 100vh;
+}
+
+.main-header.navbar {
+  border-bottom: 1px solid var(--lte-header-border);
+  padding: 0.5rem 1rem;
+  margin-left: 250px;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+@media (max-width: 991.98px) {
+  .main-header.navbar {
+    margin-left: 0;
+  }
+  .sidebar-collapse .main-sidebar {
+    margin-left: -250px;
+  }
+  .sidebar-collapse .main-header.navbar,
+  .sidebar-collapse .content-wrapper {
+    margin-left: 0 !important;
+  }
+}
+
+.main-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  min-height: 100vh;
+  z-index: 1038;
+  background: var(--lte-sidebar-bg);
+  transition: margin-left 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-collapse .main-sidebar {
+  margin-left: -250px;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  padding: 0.8125rem 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-decoration: none;
+  border-bottom: 1px solid #4b545c;
+  background: #2b2f33;
+}
+
+.brand-link:hover {
+  color: #fff !important;
+}
+
+.brand-text {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.sidebar {
+  overflow-y: auto;
+  height: calc(100vh - 57px);
+  padding-bottom: 1rem;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.65rem 1rem;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar .nav-link:hover {
+  background: var(--lte-sidebar-hover);
+  color: #fff;
+}
+
+.sidebar .nav-link.active {
+  background: var(--lte-brand);
+  color: #fff;
+}
+
+.sidebar-heading {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 1rem 1rem 0.35rem;
+  font-weight: 600;
+}
+
+.content-wrapper {
+  margin-left: 250px;
+  min-height: calc(100vh - 57px);
+  background: var(--lte-content-bg);
+  transition: margin-left 0.3s ease-in-out;
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 991.98px) {
+  .content-wrapper {
+    margin-left: 0;
+  }
+}
+
+.content-header {
+  padding: 1rem 0;
+  background: #fff;
+  border-bottom: 1px solid var(--lte-header-border);
+  margin-bottom: 1rem;
+}
+
+.content-header h1 {
+  font-size: 1.65rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.small-box {
+  border-radius: 0.25rem;
+  position: relative;
+  display: block;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.125), 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.small-box > .inner {
+  padding: 10px;
+}
+
+.small-box h3 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.small-box .icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 70px;
+  color: rgba(0, 0, 0, 0.15);
+}
+
+.small-box-footer {
+  display: block;
+  padding: 3px 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.small-box-footer:hover {
+  color: #fff;
+}
+
+.bg-info { background: #17a2b8 !important; }
+.bg-success { background: #28a745 !important; }
+.bg-warning { background: #ffc107 !important; color: #1f2d3d !important; }
+.bg-danger { background: #dc3545 !important; }
+
+.card {
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.125), 0 1px 3px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  font-weight: 600;
+}

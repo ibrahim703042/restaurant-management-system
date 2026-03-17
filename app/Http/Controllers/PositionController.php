@@ -3,62 +3,92 @@
 namespace App\Http\Controllers;
 
 use App\Models\Position;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PositionController extends Controller
 {
     public function index()
     {
-
-        $positions = DB::table('positions')->get();
-        return view('pages.tables.positionTable', compact('positions'));
+        return view('positions.manage');
     }
 
-    public function create()
+    public function listJson(Request $request): JsonResponse
     {
-        return view('pages.forms.position');
+        $q = Position::query()
+            ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->search.'%'));
+
+        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
+        $paginated = $q->orderBy('title')->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'total' => $paginated->total(),
+        ]);
     }
 
-    public function store(Request $request)
+    public function showJson(Position $position): JsonResponse
     {
-		$positionData = [
-        'name' => $request->name];
-
-		position::create($positionData);
-
-        return redirect()->route('positions.index')->with('status', 'Position Created Successfully');
-
+        return response()->json(['position' => $position]);
     }
 
-    public function count($id)
+    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $count = DB::table('positions')
-        ->where('id',$id)
-        ->count();
-        return view('admin.index', compact('count'));
+        try {
+            $data = $request->validate(['title' => 'required|string|max:255']);
+        } catch (ValidationException $e) {
+            return $this->jsonErr($request, $e->errors(), 422);
+        }
 
-        // return view('PhotoFeed.PhotoDetails',['showCounts'=>$showCounts,'id'=>$id]);
+        $position = Position::create($data);
+
+        return $this->jsonOk($request, ['message' => 'Position created.', 'position' => $position], redirect()->route('positions.index')->with('status', 'Position created.'));
     }
 
-    public function edit($id)
+    public function update(Request $request, Position $position): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $position = position::find($id);
-        return view('pages\forms\edit_position', compact('position'));
+        try {
+            $data = $request->validate(['title' => 'required|string|max:255']);
+        } catch (ValidationException $e) {
+            return $this->jsonErr($request, $e->errors(), 422);
+        }
+
+        $position->update($data);
+
+        return $this->jsonOk($request, ['message' => 'Position updated.', 'position' => $position->fresh()], redirect()->route('positions.index')->with('status', 'Position updated.'));
     }
 
-    public function update(Request $request, $id)
+    public function destroy(Request $request, Position $position): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $position = position::find($id);
-        $position->name = $request->input('name');
-        $position->update();
+        if ($position->employees()->exists()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Position is assigned to employees.', 'errors' => ['title' => ['Reassign employees first.']]], 422);
+            }
 
-        return redirect()->route('positions.index')->with('status','Position Updated Successfully');
-    }
-
-    public function destroy($id)
-    {
-        $position = position::find($id);
+            return back()->withErrors(['delete' => 'Position has employees.']);
+        }
         $position->delete();
-        return redirect()->back()->with('status','position Deleted Successfully');
+
+        return $this->jsonOk($request, ['message' => 'Position removed.'], redirect()->route('positions.index')->with('status', 'Position removed.'));
+    }
+
+    private function jsonOk(Request $request, array $json, $redirect)
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($json);
+        }
+
+        return $redirect;
+    }
+
+    private function jsonErr(Request $request, array $errors, int $code): JsonResponse
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $errors], $code);
+        }
+        throw ValidationException::withMessages($errors);
     }
 }

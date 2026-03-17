@@ -11,6 +11,11 @@ class Position extends Model
     protected $table="positions";
     // protected $primarykey ="id";
     protected $fillable = [
-        'name',
+        'title',
     ];
+
+    public function employees()
+    {
+        return $this->hasMany(Employee::class, 'position_id');
+    }
 }

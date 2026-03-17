@@ -26,9 +26,9 @@
                 </h3>
 
 
-                    <a href="{{ route('employee.create') }}" class="btn btn-primary shadow">
+                    <a href="{{ route('employees.index') }}" class="btn btn-primary shadow">
                         <i class=" fa fa-plus-circle me-2"></i>
-                        Add new employee
+                        Employees (add / edit)
                     </a>
 
             </div>
@@ -65,14 +65,12 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ url('/edit-employee/'.$item->id) }}" class="text-decoration-none text-success mx-1">
-                                        update
+                                    <a href="{{ route('employees.index') }}" class="text-decoration-none text-success mx-1">
+                                        Manage
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ url('/delete-employee/'.$item->id) }}" class="text-decoration-none text-danger mx-1">
-                                    delete
-                                    </a>
+                                    <span class="text-muted small">Use Employees page</span>
                                 </td>
                             </tr>
                         @endforeach

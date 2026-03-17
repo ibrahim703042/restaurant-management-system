@@ -2,88 +2,147 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\Store;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
     public function index()
     {
+        $categories = Category::orderBy('name')->get(['id', 'name']);
+        $stores = Store::orderBy('name')->get(['id', 'name']);
 
-        $products = DB::table('products')->get();
-        return view('pages.tables.productTable', compact('products'));
+        return view('products.manage', compact('categories', 'stores'));
     }
 
-    public function create()
+    public function listJson(Request $request): JsonResponse
     {
-        return view('pages.forms.product');
-    }
+        $q = Product::query()
+            ->with(['category:id,name', 'store:id,name'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $s = '%'.$request->search.'%';
+                $query->where(function ($q2) use ($s) {
+                    $q2->where('product_name', 'like', $s)->orWhere('description', 'like', $s);
+                });
+            })
+            ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id));
 
+        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
+        $paginated = $q->orderBy('product_name')->paginate($perPage);
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'total' => $paginated->total(),
         ]);
+    }
 
-       $image_path = '';
-       if ($request->hasFile('image')) {
-           $image_path = $request->file('image')->store('image', 'public');
+    public function showJson(Product $product): JsonResponse
+    {
+        $product->load(['category:id,name', 'store:id,name']);
+
+        return response()->json(['product' => $product]);
+    }
+
+    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        try {
+            $request->validate([
+                'product_name' => 'required|string|max:255',
+                'price' => 'required|numeric|min:0',
+                'description' => 'nullable|string|max:5000',
+                'category_id' => 'required|exists:categories,id',
+                'store_id' => 'required|exists:stores,id',
+                'status' => 'required|integer',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            ]);
+        } catch (ValidationException $e) {
+            return $this->jsonErr($request, $e->errors(), 422);
         }
 
-		$productData = [
+        $imagePath = '';
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+        }
 
-        'product_name' => $request->name,
-        'price' => $request->price,
-        'description' => $request->description,
-        'category_id' => $request->category,
-        'store_id' => $request->store,
-        'image' => $image_path ?: 'products/default.png',
-        'status' => $request->status];
-
-        $product = Product::create($productData);
+        $product = Product::create([
+            'product_name' => $request->product_name,
+            'price' => $request->price,
+            'description' => $request->description ?? '',
+            'category_id' => $request->category_id,
+            'store_id' => $request->store_id,
+            'image' => $imagePath ?: 'products/default.png',
+            'status' => $request->status,
+        ]);
         \App\Models\InventoryStock::query()->firstOrCreate(
             ['store_id' => $product->store_id, 'product_id' => $product->id],
             ['quantity' => 0, 'reorder_level' => 0]
         );
+        $product->load(['category:id,name', 'store:id,name']);
 
-        return redirect()->route('products.index')->with('status', 'Product Created Successfully');
-
+        return $this->jsonOk($request, ['message' => 'Product created.', 'product' => $product], redirect()->route('products.index')->with('status', 'Product created.'));
     }
 
-    public function show()
+    public function update(Request $request, Product $product): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        //
-    }
+        try {
+            $request->validate([
+                'product_name' => 'required|string|max:255',
+                'price' => 'required|numeric|min:0',
+                'description' => 'nullable|string|max:5000',
+                'category_id' => 'required|exists:categories,id',
+                'store_id' => 'required|exists:stores,id',
+                'status' => 'required|integer',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            ]);
+        } catch (ValidationException $e) {
+            return $this->jsonErr($request, $e->errors(), 422);
+        }
 
-    public function edit($id)
-    {
-        $product = Product::find($id);
-        return view('pages.forms.edit_product', compact('product'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $product = Product::find($id);
-        $product->product_name = $request->input('name');
-        $product->price = $request->input('price');
-        $product->description = $request->input('description');
-        $product->category_id = $request->input('category');
-        $product->store_id = $request->input('store');
-        $product->status = $request->input('status');
+        $product->fill([
+            'product_name' => $request->product_name,
+            'price' => $request->price,
+            'description' => $request->description ?? '',
+            'category_id' => $request->category_id,
+            'store_id' => $request->store_id,
+            'status' => $request->status,
+        ]);
         if ($request->hasFile('image')) {
             $product->image = $request->file('image')->store('products', 'public');
         }
         $product->save();
+        $product->load(['category:id,name', 'store:id,name']);
 
-        return redirect()->route('products.index')->with('status','Product Updated Successfully');
+        return $this->jsonOk($request, ['message' => 'Product updated.', 'product' => $product], redirect()->route('products.index')->with('status', 'Product updated.'));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, Product $product): JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $product = Product::find($id);
         $product->delete();
-        return redirect()->back()->with('status','Product Deleted Successfully');
+
+        return $this->jsonOk($request, ['message' => 'Product removed.'], redirect()->route('products.index')->with('status', 'Product removed.'));
+    }
+
+    private function jsonOk(Request $request, array $json, $redirect)
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($json);
+        }
+
+        return $redirect;
+    }
+
+    private function jsonErr(Request $request, array $errors, int $code): JsonResponse
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $errors], $code);
+        }
+        throw ValidationException::withMessages($errors);
     }
 }

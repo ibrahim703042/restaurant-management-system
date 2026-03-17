@@ -3,7 +3,7 @@
 <div class="container-fluid px-4">
     <h1 class="mt-4">Employees</h1>
     @if (session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
-    <a href="{{ route('employee.create') }}" class="btn btn-primary mb-3">Add employee</a>
+    <a href="{{ route('employees.index') }}" class="btn btn-primary mb-3">Open Employees (modals)</a>
     <div class="card"><div class="card-body table-responsive">
         <table class="table table-striped">
             <thead><tr><th>Photo</th><th>Name</th><th>Email</th><th>Phone</th><th></th></tr></thead>
@@ -21,8 +21,7 @@
                     <td>{{ $e->email }}</td>
                     <td>{{ $e->phone }}</td>
                     <td>
-                        <a href="{{ url('/edit-employee/'.$e->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <a href="{{ url('/delete-employee/'.$e->id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a>
+                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-primary">Edit in modal</a>
                     </td>
                 </tr>
                 @endforeach

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\PayrollPeriod;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PayrollPeriodController extends Controller
 {
@@ -15,27 +17,50 @@ class PayrollPeriodController extends Controller
     public function index()
     {
         $this->authorizePermission('hr.payroll.view');
-        $periods = PayrollPeriod::orderByDesc('period_start')->paginate(20);
 
-        return view('payroll.index', compact('periods'));
+        return view('payroll.manage');
     }
 
-    public function create()
+    public function listJson(Request $request): JsonResponse
     {
-        $this->authorizePermission('hr.payroll.manage');
+        $this->authorizePermission('hr.payroll.view');
 
-        return view('payroll.create');
-    }
+        $q = PayrollPeriod::query()
+            ->when($request->filled('search'), fn ($query) => $query->where('notes', 'like', '%'.$request->search.'%'));
 
-    public function store(Request $request)
-    {
-        $this->authorizePermission('hr.payroll.manage');
-        $data = $request->validate([
-            'period_start' => 'required|date',
-            'period_end' => 'required|date|after_or_equal:period_start',
-            'notes' => 'nullable|string|max:2000',
+        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
+        $paginated = $q->orderByDesc('period_start')->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'total' => $paginated->total(),
         ]);
-        PayrollPeriod::create($data + ['status' => 'draft']);
+    }
+
+    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        $this->authorizePermission('hr.payroll.manage');
+
+        try {
+            $data = $request->validate([
+                'period_start' => 'required|date',
+                'period_end' => 'required|date|after_or_equal:period_start',
+                'notes' => 'nullable|string|max:2000',
+            ]);
+        } catch (ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
+            }
+            throw $e;
+        }
+
+        $period = PayrollPeriod::create($data + ['status' => 'draft']);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Payroll period created (draft).', 'period' => $period]);
+        }
 
         return redirect()->route('payroll.index')->with('status', 'Payroll period created (draft).');
     }

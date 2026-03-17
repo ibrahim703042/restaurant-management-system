@@ -5,39 +5,148 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Position;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class EmployeeController extends Controller
 {
     public function index()
     {
+        $positions = Position::orderBy('title')->get();
 
-        $employees = DB::table('employees')->get();
-        return view('pages.tables.employeeTable', compact('employees'));
+        return view('employees.manage', compact('positions'));
     }
 
-    public function create()
+    public function listJson(Request $request): JsonResponse
     {
-        return view('pages.forms.employee');
-    }
+        $q = Employee::query()
+            ->with('position:id,title')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $s = '%'.$request->search.'%';
+                $query->where(function ($q2) use ($s) {
+                    $q2->where('first_name', 'like', $s)
+                        ->orWhere('last_name', 'like', $s)
+                        ->orWhere('email', 'like', $s)
+                        ->orWhere('phone', 'like', $s);
+                });
+            })
+            ->when($request->filled('position_id'), fn ($query) => $query->where('position_id', $request->position_id));
 
+        $perPage = min(50, max(5, (int) $request->get('per_page', 15)));
+        $paginated = $q->orderByDesc('id')->paginate($perPage);
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
-            'position_id' => 'nullable|exists:positions,id',
+        return response()->json([
+            'data' => $paginated->items(),
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
+            'total' => $paginated->total(),
         ]);
+    }
 
-       $image_path = '';
-       if ($request->hasFile('image')) {
-           $image_path = $request->file('image')->store('employees', 'public');
+    public function showJson(Employee $employee): JsonResponse
+    {
+        $employee->load('position:id,title');
+
+        return response()->json(['employee' => $employee]);
+    }
+
+    public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        try {
+            $data = $this->validatedEmployee($request, true, null);
+        } catch (ValidationException $e) {
+            return $this->jsonOrRedirect($request, $e->errors(), 422);
         }
-        // $file = $request->file('image');
-		// $fileName = time() . '.' . $file->getClientOriginalExtension();
-		// $file->storeAs('public/images', $fileName);
 
-        $employeeData = [
+        $imagePath = '';
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('employees', 'public');
+        }
+
+        $employee = Employee::create(array_merge($data, [
+            'image' => $imagePath ?: 'default.png',
+            'position_id' => $data['position_id'] ?: Position::query()->value('id'),
+        ]));
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Employee created.', 'employee' => $employee->load('position')]);
+        }
+
+        return redirect()->route('employees.index')->with('status', 'Employee created.');
+    }
+
+    public function update(Request $request, Employee $employee): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        try {
+            $data = $this->validatedEmployee($request, false, $employee);
+        } catch (ValidationException $e) {
+            return $this->jsonOrRedirect($request, $e->errors(), 422);
+        }
+
+        $employee->fill([
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'gender' => $data['gender'],
+            'birthday' => $data['birthday'],
+            'phone' => $data['phone'],
+            'mother_name' => $data['mother_name'],
+            'father_name' => $data['father_name'],
+            'country' => $data['country'],
+            'city' => $data['city'],
+            'address' => $data['address'],
+            'position_id' => $data['position_id'] ?: $employee->position_id,
+        ]);
+        if ($request->hasFile('image')) {
+            $employee->image = $request->file('image')->store('employees', 'public');
+        }
+        $employee->save();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Employee updated.', 'employee' => $employee->fresh()->load('position')]);
+        }
+
+        return redirect()->route('employees.index')->with('status', 'Employee updated.');
+    }
+
+    public function destroy(Request $request, Employee $employee): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        $employee->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Employee removed.']);
+        }
+
+        return redirect()->route('employees.index')->with('status', 'Employee removed.');
+    }
+
+    private function validatedEmployee(Request $request, bool $isCreate, ?Employee $employee): array
+    {
+        $emailRules = ['required', 'email', 'max:255', Rule::unique('employees', 'email')];
+        if (! $isCreate && $employee) {
+            $emailRules = ['required', 'email', 'max:255', Rule::unique('employees', 'email')->ignore($employee->id)];
+        }
+
+        $rules = [
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'email' => $emailRules,
+            'gender' => 'required|in:Male,Female,Other',
+            'birthdate' => 'required|date',
+            'phone' => 'required|string|max:50',
+            'mother' => 'required|string|max:255',
+            'father' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'address' => 'required|string|max:500',
+            'position_id' => 'nullable|exists:positions,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:4096',
+        ];
+
+        $request->validate($rules);
+
+        return [
             'first_name' => $request->fname,
             'last_name' => $request->lname,
             'email' => $request->email,
@@ -49,52 +158,16 @@ class EmployeeController extends Controller
             'country' => $request->country,
             'city' => $request->city,
             'address' => $request->address,
-            'image' => $image_path ?: 'default.png',
-            'position_id' => $request->input('position_id') ?: Position::query()->value('id'),
+            'position_id' => $request->input('position_id'),
         ];
-
-        Employee::create($employeeData);
-
-        return redirect()->route('employees.index')->with('status', 'Employee created successfully.');
-
-		// return response()->json(['status','employee Added Successfully']);
     }
 
-    public function show()
+    private function jsonOrRedirect(Request $request, array $errors, int $code): JsonResponse
     {
-        //
-    }
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $errors], $code);
+        }
 
-    public function edit($id)
-    {
-        $employee = Employee::find($id);
-        return view('pages\forms\edit_employee', compact('employee'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $employee = Employee::find($id);
-        $employee->first_name = $request->input('fname');
-        $employee->last_name = $request->input('lname');
-        $employee->email = $request->input('email');
-        $employee->gender= $request->input('gender');
-        $employee->birthday= $request->input('birthdate');
-        $employee->phone= $request->input('phone');
-        $employee->mother_name= $request->input('mother');
-        $employee->father_name= $request->input('father');
-        $employee->country= $request->input('country');
-        $employee->city= $request->input('city');
-        $employee->address= $request->input('address');
-        // $employee->image= $request->input('image');
-        $employee->update();
-
-        return redirect()->route('employees.index')->with('status','Employee Updated Successfully');
-    }
-
-    public function destroy($id)
-    {
-        $employee = Employee::find($id);
-        $employee->delete();
-        return redirect()->back()->with('status','Employee Deleted Successfully');
+        throw ValidationException::withMessages($errors);
     }
 }

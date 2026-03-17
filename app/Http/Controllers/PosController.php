@@ -35,6 +35,10 @@ class PosController extends Controller
 
     public function checkout(Request $request)
     {
+        $request->merge([
+            'client_id' => $request->filled('client_id') ? $request->client_id : null,
+        ]);
+
         $validated = $request->validate([
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
