@@ -6,24 +6,19 @@
 <li class="breadcrumb-item active">Payroll</li>
 @endsection
 @section('main-section')
-<div class="card card-outline card-primary">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h3 class="card-title mb-0"><i class="fas fa-file-invoice me-2"></i>Periods</h3>
+<x-admin.table-card title="Periods" icon="fas fa-file-invoice">
+    <x-slot:actions>
         @can('hr.payroll.manage')
         <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>New period</button>
         @endcan
-    </div>
-    <div class="card-body">
+    </x-slot:actions>
+    <x-slot:filters>
         @cannot('hr.payroll.manage')
-        <p class="text-muted small">You can view periods. Ask an admin to create new periods.</p>
+        <p class="text-muted small mb-0">You can view periods. Ask an admin to create new periods.</p>
         @endcannot
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
-                <thead class="table-light"><tr><th>#</th><th>Start</th><th>End</th><th>Status</th><th>Notes</th></tr></thead>
-            </table>
-        </div>
-    </div>
-</div>
+    </x-slot:filters>
+    <thead class="table-light"><tr><th>#</th><th>Start</th><th>End</th><th>Status</th><th>Notes</th></tr></thead>
+</x-admin.table-card>
 @can('hr.payroll.manage')
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
@@ -32,9 +27,9 @@
             <form id="form">@csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
-                    <div class="mb-2"><label class="form-label">Period start</label><input type="date" name="period_start" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Period end</label><input type="date" name="period_end" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
+                    <x-admin.input name="period_start" type="date" label="Period start" required />
+                    <x-admin.input name="period_end" type="date" label="Period end" required />
+                    <x-admin.textarea name="notes" label="Notes" rows="2" />
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Create</button></div>
             </form>
@@ -47,12 +42,12 @@
 <script>
 (function () {
     const listUrl = @json(route('payroll.list'));
-    $('#dt-table').DataTable({
-        processing: true, serverSide: true, ajax: { url: listUrl },
+    const dtPay = $('#dt-table').DataTable({
+        serverSide: true, ajax: { url: listUrl },
         columns: [
             { data: 'id' }, { data: 'period_start' }, { data: 'period_end' }, { data: 'status' }, { data: 'notes' }
         ],
-        order: [[0, 'desc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+        order: [[0, 'desc']]
     });
     @can('hr.payroll.manage')
     const storeUrl = @json(route('payroll.store'));
@@ -69,7 +64,7 @@
             .then(async function (r) { var j = await r.json().catch(function () { return {}; });
                 if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : j.message; err.classList.remove('d-none'); return; }
                 modal.hide(); Swal.fire({ icon: 'success', title: j.message || 'Created', timer: 1500, showConfirmButton: false });
-                $('#dt-table').DataTable().ajax.reload(null, false);
+                dtPay.ajax.reload(null, false);
             });
     });
     @endcan

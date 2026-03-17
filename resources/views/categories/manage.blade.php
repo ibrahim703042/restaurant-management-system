@@ -6,13 +6,12 @@
 <li class="breadcrumb-item active">Categories</li>
 @endsection
 @section('main-section')
-<div class="card card-outline card-primary">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h3 class="card-title mb-0"><i class="fas fa-th me-2"></i>Menu categories</h3>
+<x-admin.table-card title="Menu categories" icon="fas fa-th">
+    <x-slot:actions>
         <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add category</button>
-    </div>
-    <div class="card-body">
-        <div class="row g-2 mb-3 align-items-end">
+    </x-slot:actions>
+    <x-slot:filters>
+        <div class="row g-2 align-items-end">
             <div class="col-md-3">
                 <label class="form-label small mb-0">Status</label>
                 <select class="form-select form-select-sm" id="filterStatus">
@@ -23,13 +22,9 @@
             </div>
             <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Refresh filters</button></div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
-                <thead class="table-light"><tr><th>#</th><th>Image</th><th>Name</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
-            </table>
-        </div>
-    </div>
-</div>
+    </x-slot:filters>
+    <thead class="table-light"><tr><th>#</th><th>Image</th><th>Name</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
+</x-admin.table-card>
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -41,13 +36,9 @@
                 @csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
-                    <div class="mb-2"><label class="form-label">Name</label><input name="name" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Image</label><input type="file" name="image" class="form-control" accept="image/*"></div>
-                    <div class="mb-2"><label class="form-label">Status</label>
-                        <select name="status" class="form-select" required>
-                            <option value="1">Active</option><option value="0">Inactive</option>
-                        </select>
-                    </div>
+                    <x-admin.input name="name" label="Name" required />
+                    <div class="mb-3"><label class="form-label fw-semibold">Image</label><input type="file" name="image" class="form-control" accept="image/*"></div>
+                    <x-admin.radio-group name="status" label="Status" :options="['1' => 'Active', '0' => 'Inactive']" :selected="'1'" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -69,7 +60,6 @@
     const modal = new bootstrap.Modal(document.getElementById('modal'));
     const form = document.getElementById('form');
     const dt = $('#dt-table').DataTable({
-        processing: true,
         serverSide: true,
         ajax: {
             url: listUrl,
@@ -82,23 +72,23 @@
             { data: 'status_html', orderable: false, searchable: false },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[2, 'asc']],
-        pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-        language: { processing: 'Loading…', search: 'Search:', lengthMenu: 'Show _MENU_ rows', info: 'Showing _START_–_END_ of _TOTAL_', infoEmpty: 'No rows', paginate: { first: '«', previous: '‹', next: '›', last: '»' } }
+        order: [[2, 'asc']]
     });
     document.getElementById('btnApply').addEventListener('click', function () { dt.ajax.reload(); });
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });
     document.getElementById('btnAdd').addEventListener('click', function () {
-        editingId = null; document.getElementById('modalTitle').textContent = 'Add category'; form.reset(); form.status.value = '1';
+        editingId = null; document.getElementById('modalTitle').textContent = 'Add category'; form.reset();
+        form.querySelector('[name="status"][value="1"]').checked = true;
         document.getElementById('formErrors').classList.add('d-none'); modal.show();
     });
     function openEdit(id) {
         editingId = id; document.getElementById('modalTitle').textContent = 'Edit category';
         document.getElementById('formErrors').classList.add('d-none');
         fetch(base + '/' + id + '/json', { headers: { 'Accept': 'application/json' } }).then(r => r.json()).then(function (d) {
-            var c = d.category; form.name.value = c.name; form.status.value = c.status; modal.show();
+            var c = d.category; form.name.value = c.name;
+            form.querySelectorAll('[name="status"]').forEach(function (r) { r.checked = String(r.value) === String(c.status); });
+            modal.show();
         });
     }
     form.addEventListener('submit', function (ev) {

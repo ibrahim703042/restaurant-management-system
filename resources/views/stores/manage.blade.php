@@ -6,19 +6,12 @@
 <li class="breadcrumb-item active">Stores</li>
 @endsection
 @section('main-section')
-<div class="card card-outline card-primary">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h3 class="card-title mb-0"><i class="fas fa-store me-2"></i>Branches / stores</h3>
+<x-admin.table-card title="Branches / stores" icon="fas fa-store">
+    <x-slot:actions>
         <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add store</button>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
-                <thead class="table-light"><tr><th>#</th><th>Name</th><th>Code</th><th>Phone</th><th>Primary stock</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
-            </table>
-        </div>
-    </div>
-</div>
+    </x-slot:actions>
+    <thead class="table-light"><tr><th>#</th><th>Name</th><th>Code</th><th>Phone</th><th>Primary stock</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
+</x-admin.table-card>
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -27,13 +20,13 @@
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
                     <div class="row g-2">
-                        <div class="col-md-6"><label class="form-label">Name</label><input name="name" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label">Code</label><input name="code" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label">Phone</label><input name="phone" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label">Status</label><input type="number" name="status" class="form-control" value="1" required></div>
-                        <div class="col-12"><label class="form-label">Address</label><input name="address" class="form-control"></div>
-                        <div class="col-12"><label class="form-label">Notes</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
-                        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_primary_stock_location" value="1" id="chkPrimary" checked><label class="form-check-label" for="chkPrimary">Primary stock location</label></div></div>
+                        <div class="col-md-6"><x-admin.input name="name" label="Name" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="code" label="Code" wrapperClass="mb-0" /></div>
+                        <div class="col-md-6"><x-admin.input name="phone" label="Phone" wrapperClass="mb-0" /></div>
+                        <div class="col-md-6"><x-admin.input name="status" type="number" label="Status" value="1" wrapperClass="mb-0" required /></div>
+                        <div class="col-12"><x-admin.input name="address" label="Address" wrapperClass="mb-0" /></div>
+                        <div class="col-12"><x-admin.textarea name="notes" label="Notes" rows="2" wrapperClass="mb-0" /></div>
+                        <div class="col-12"><x-admin.checkbox name="is_primary_stock_location" value="1" label="Primary stock location" :checked="true" id="chkPrimary" /></div>
                     </div>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
@@ -52,14 +45,14 @@
     let editingId = null;
     const modal = new bootstrap.Modal(document.getElementById('modal')), form = document.getElementById('form');
     const dt = $('#dt-table').DataTable({
-        processing: true, serverSide: true, ajax: { url: listUrl },
+        serverSide: true, ajax: { url: listUrl },
         columns: [
             { data: 'id' }, { data: 'name' }, { data: 'code' }, { data: 'phone' },
             { data: 'primary_html', orderable: false, searchable: false },
             { data: 'status_html', orderable: false, searchable: false },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[1, 'asc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+        order: [[1, 'asc']]
     });
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });

@@ -6,29 +6,24 @@
 <li class="breadcrumb-item active">Zones</li>
 @endsection
 @section('main-section')
-<div class="card card-outline card-primary">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h3 class="card-title mb-0"><i class="fas fa-map-marker-alt me-2"></i>Floor zones</h3>
+<x-admin.table-card title="Floor zones" icon="fas fa-map-marker-alt">
+    <x-slot:actions>
         <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add zone</button>
-    </div>
-    <div class="card-body">
-        <div class="row g-2 mb-3 align-items-end">
+    </x-slot:actions>
+    <x-slot:filters>
+        <div class="row g-2 align-items-end">
             <div class="col-md-4">
                 <label class="form-label small mb-0">Store</label>
-                <select class="form-select form-select-sm" id="filterStore">
+                <select class="form-select form-select-sm admin-ts-select" id="filterStore" data-placeholder="All stores">
                     <option value="">All stores</option>
                     @foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                 </select>
             </div>
             <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Apply filter</button></div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
-                <thead class="table-light"><tr><th>#</th><th>Store</th><th>Zone</th><th>Sort</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
-            </table>
-        </div>
-    </div>
-</div>
+    </x-slot:filters>
+    <thead class="table-light"><tr><th>#</th><th>Store</th><th>Zone</th><th>Sort</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
+</x-admin.table-card>
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -36,14 +31,13 @@
             <form id="form">@csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
-                    <div class="mb-2"><label class="form-label">Store</label>
-                        <select name="store_id" class="form-select" required>@foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select>
-                    </div>
-                    <div class="mb-2"><label class="form-label">Name</label><input name="name" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Sort order</label><input type="number" name="sort_order" class="form-control" value="0" min="0"></div>
-                    <div class="mb-2"><label class="form-label">Status</label>
-                        <select name="status" class="form-select"><option value="1">Active</option><option value="0">Inactive</option></select>
-                    </div>
+                    <x-admin.select-search name="store_id" id="selZoneStore" label="Store" required
+                        createUrl="{{ route('stores.index') }}" createLabel="New store">
+                        @foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
+                    </x-admin.select-search>
+                    <x-admin.input name="name" label="Name" required />
+                    <x-admin.input name="sort_order" type="number" label="Sort order" value="0" min="0" />
+                    <x-admin.radio-group name="status" label="Status" :options="['1' => 'Active', '0' => 'Inactive']" selected="1" />
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
             </form>
@@ -60,28 +54,43 @@
     const base = @json(url('/dining-zone'));
     let editingId = null;
     const modal = new bootstrap.Modal(document.getElementById('modal')), form = document.getElementById('form');
+    const selZoneStore = document.getElementById('selZoneStore');
+    function ensureTs(sel) {
+        if (sel && sel.classList.contains('admin-ts-select') && window.adminTomSelectInitOne && !sel.tomselect) {
+            window.adminTomSelectInitOne(sel);
+        }
+    }
     const dt = $('#dt-table').DataTable({
-        processing: true, serverSide: true,
-        ajax: { url: listUrl, data: function (d) { d.store_id = document.getElementById('filterStore').value; } },
+        serverSide: true,
+        ajax: { url: listUrl, data: function (d) {
+            var f = document.getElementById('filterStore');
+            d.store_id = f.tomselect ? f.tomselect.getValue() : f.value;
+        } },
         columns: [
             { data: 'id' }, { data: 'store' }, { data: 'name' }, { data: 'sort_order' },
             { data: 'status_html', orderable: false, searchable: false },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[3, 'asc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+        order: [[3, 'asc']]
     });
     document.getElementById('btnApply').addEventListener('click', function () { dt.ajax.reload(); });
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });
     document.getElementById('btnAdd').addEventListener('click', () => {
-        editingId = null; document.getElementById('modalTitle').textContent = 'Add zone'; form.reset(); form.status.value = '1';
+        editingId = null; document.getElementById('modalTitle').textContent = 'Add zone'; form.reset();
+        form.querySelector('[name="status"][value="1"]').checked = true;
+        ensureTs(selZoneStore); if (selZoneStore.tomselect && selZoneStore.options[0]) selZoneStore.tomselect.setValue(selZoneStore.options[0].value, true);
         document.getElementById('formErrors').classList.add('d-none'); modal.show();
     });
     function openEdit(id) {
         editingId = id; document.getElementById('modalTitle').textContent = 'Edit zone';
         document.getElementById('formErrors').classList.add('d-none');
         fetch(base + '/' + id + '/json').then(r => r.json()).then(({ zone: z }) => {
-            form.store_id.value = z.store_id; form.name.value = z.name; form.sort_order.value = z.sort_order; form.status.value = z.status; modal.show();
+            form.name.value = z.name; form.sort_order.value = z.sort_order;
+            form.querySelectorAll('[name="status"]').forEach(function (r) { r.checked = String(r.value) === String(z.status); });
+            ensureTs(selZoneStore);
+            if (selZoneStore.tomselect) selZoneStore.tomselect.setValue(String(z.store_id), true); else selZoneStore.value = z.store_id;
+            modal.show();
         });
     }
     form.addEventListener('submit', ev => {
@@ -98,7 +107,7 @@
             .then(res => { if (!res.isConfirmed) return;
                 fetch(base + '/' + id, { method: 'DELETE', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(async r => { const j = await r.json().catch(() => ({}));
-                        if (!r.ok) { Swal.fire('Error', j.message||'Cannot delete', 'error'); return; }
+                        if (!r.ok) { Swal.fire('Error', j.message||'Error', 'error'); return; }
                         Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
                     });
             });

@@ -12,11 +12,9 @@
             <form method="post" action="{{ route('settings.update', $s) }}" class="row align-items-center py-2 border-bottom">
                 @csrf @method('PUT')
                 <div class="col-md-5"><code>{{ $s->key }}</code></div>
-                <div class="col-md-4">
-                    <select name="is_active" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="1" {{ $s->is_active ? 'selected' : '' }}>On</option>
-                        <option value="0" {{ ! $s->is_active ? 'selected' : '' }}>Off</option>
-                    </select>
+                <div class="col-md-4 d-flex flex-wrap gap-3 align-items-center">
+                    <x-admin.radio name="is_active" value="1" label="On" :checked="$s->is_active" onchange="this.form.submit()" />
+                    <x-admin.radio name="is_active" value="0" label="Off" :checked="! $s->is_active" onchange="this.form.submit()" />
                 </div>
                 <input type="hidden" name="value" value="{{ $s->value }}">
             </form>

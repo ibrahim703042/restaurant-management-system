@@ -6,20 +6,15 @@
 <li class="breadcrumb-item active">Clients</li>
 @endsection
 @section('main-section')
-<div class="card card-outline card-primary">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h3 class="card-title mb-0"><i class="fas fa-user-friends me-2"></i>Clients</h3>
+<x-admin.table-card title="Clients" icon="fas fa-user-friends">
+    <x-slot:actions>
         <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add client</button>
-    </div>
-    <div class="card-body">
-        <div class="mb-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Reload table</button></div>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover table-striped align-middle w-100" id="dt-table">
-                <thead class="table-light"><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th style="width:160px">Actions</th></tr></thead>
-            </table>
-        </div>
-    </div>
-</div>
+    </x-slot:actions>
+    <x-slot:filters>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Reload table</button>
+    </x-slot:filters>
+    <thead class="table-light"><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th style="width:160px">Actions</th></tr></thead>
+</x-admin.table-card>
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -27,9 +22,9 @@
             <form id="form">@csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
-                    <div class="mb-2"><label class="form-label">Name</label><input name="name" class="form-control" required></div>
-                    <div class="mb-2"><label class="form-label">Phone</label><input name="phone" class="form-control"></div>
-                    <div class="mb-2"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+                    <x-admin.input name="name" label="Name" required />
+                    <x-admin.input name="phone" label="Phone" />
+                    <x-admin.textarea name="address" label="Address" rows="2" />
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
             </form>
@@ -48,12 +43,12 @@
     const modal = new bootstrap.Modal(document.getElementById('modal'));
     const form = document.getElementById('form');
     const dt = $('#dt-table').DataTable({
-        processing: true, serverSide: true, ajax: { url: listUrl },
+        serverSide: true, ajax: { url: listUrl },
         columns: [
             { data: 'id' }, { data: 'name' }, { data: 'phone' }, { data: 'address' },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[0, 'desc']], pageLength: 25, lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]]
+        order: [[0, 'desc']]
     });
     document.getElementById('btnApply').addEventListener('click', function () { dt.ajax.reload(); });
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });

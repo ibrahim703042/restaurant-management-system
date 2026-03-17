@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
     <link href="{{ asset('css/restaurant-admin.css') }}?v=2" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="{{ asset('css/admin-components.css') }}?v=1" rel="stylesheet">
     @stack('styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -42,6 +44,9 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js" crossorigin="anonymous"></script>
+    <script src="{{ asset('js/admin-datatables.js') }}?v=1"></script>
+    <script src="{{ asset('js/admin-tomselect.js') }}?v=1"></script>
     <script>
         document.getElementById('sidebarToggleBtn')?.addEventListener('click', function () {
             document.body.classList.toggle('sidebar-collapse');
