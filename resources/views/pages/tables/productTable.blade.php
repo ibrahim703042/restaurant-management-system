@@ -53,7 +53,11 @@
                             <tr>
                                 <td>{{ $item->id }}</td>
                                 <td>
-                                    <img src="storage/images/' .$item->picture. '" width="50" class="img-thumbnail rounded-circle">
+                                    @if($item->image && !str_starts_with($item->image, 'http'))
+                                        <img src="{{ asset('storage/'.$item->image) }}" width="50" height="50" class="img-thumbnail rounded-circle object-fit-cover" alt="">
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
                                 </td>
                                 <td>{{ $item->product_name }}</td>
                                 <td>{{ $item->price }}</td>

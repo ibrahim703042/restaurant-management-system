@@ -36,32 +36,30 @@
                 <table id="datatablesSimple">
                     <thead>
                         <tr>
-                            <th> # </th>
-                            <th> Capacity</th>
-                            <th> Status</th>
-                            <th> Store</th>
-                            <th> Date</th>
-                            <th colspan="2"> Action</th>
-
+                            <th>#</th>
+                            <th>Table</th>
+                            <th>Section</th>
+                            <th>Capacity</th>
+                            <th>Status</th>
+                            <th>Store</th>
+                            <th colspan="2">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($tables as $item)
                             <tr>
                                 <td>{{ $item->id }}</td>
+                                <td>{{ $item->table_name }}</td>
+                                <td>{{ $item->section ?? '—' }}</td>
                                 <td>{{ $item->capacity }}</td>
-
-                                {{--  <td>{{ $item->name }}</td>  --}}
-
-                                @if ( $item->status === 1)
+                                @if ($item->status == 1)
                                     <td>Available</td>
-                                @elseif ($item->status === 2 )
+                                @elseif ($item->status == 2)
                                     <td>Taken</td>
-                                @else($item->status === 3 )
+                                @else
                                     <td>Reserved</td>
                                 @endif
-                                <td>{{ $item->name}}</td>
-                                <td>{{ $item->created_at}}</td>
+                                <td>{{ $item->store_name ?? '—' }}</td>
                                 <td>
                                     <a href="{{ url('/edit-table/'.$item->id) }}" class="text-decoration-none text-success mx-1">
                                         update

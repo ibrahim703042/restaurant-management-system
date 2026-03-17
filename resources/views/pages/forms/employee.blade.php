@@ -34,7 +34,7 @@
 
                                         {{--  <!--upload image-->  --}}
                                         <input type="file" class="form-control @error('image') is-invalid @enderror"
-                                        name="image" id="image"  required>
+                                        name="image" id="image">
 
                                     </div>
                                 </div>
@@ -178,6 +178,14 @@
 
                                 </div>
 
+                                <div class="col-md-12 mt-2">
+                                    <label class="form-label">Position</label>
+                                    <select name="position_id" class="form-select" required>
+                                        @foreach(\App\Models\Position::orderBy('title')->get() as $pos)
+                                        <option value="{{ $pos->id }}">{{ $pos->title }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <div class="d-flex flex-column align-items-end p-3 py-2 ">
                                     <button type="submit"  class="btn btn-dark">
                                         {{ __('Add employee') }}

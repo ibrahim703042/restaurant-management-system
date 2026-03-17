@@ -23,9 +23,9 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        request()->validate([
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-       ]);
+        $request->validate([
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+        ]);
 
        $image_path = '';
        if ($request->hasFile('image')) {
@@ -38,11 +38,15 @@ class ProductController extends Controller
         'price' => $request->price,
         'description' => $request->description,
         'category_id' => $request->category,
-        'store-id' => $request->store,
-        'image' => $image_path,
+        'store_id' => $request->store,
+        'image' => $image_path ?: 'products/default.png',
         'status' => $request->status];
 
-		product::create($productData);
+        $product = Product::create($productData);
+        \App\Models\InventoryStock::query()->firstOrCreate(
+            ['store_id' => $product->store_id, 'product_id' => $product->id],
+            ['quantity' => 0, 'reorder_level' => 0]
+        );
 
         return redirect()->route('products.index')->with('status', 'Product Created Successfully');
 
@@ -55,29 +59,30 @@ class ProductController extends Controller
 
     public function edit($id)
     {
-        $product = product::find($id);
-        return view('pages\forms\edit_product', compact('product'));
+        $product = Product::find($id);
+        return view('pages.forms.edit_product', compact('product'));
     }
 
     public function update(Request $request, $id)
     {
-        $product = product::find($id);
+        $product = Product::find($id);
         $product->product_name = $request->input('name');
         $product->price = $request->input('price');
         $product->description = $request->input('description');
-        $product->category_id= $request->input('category');
-        $product->store_id= $request->input('store');
-        // $product->image= $request->input('image');
-        $product->status= $request->input('status');
-
-        $product->update();
+        $product->category_id = $request->input('category');
+        $product->store_id = $request->input('store');
+        $product->status = $request->input('status');
+        if ($request->hasFile('image')) {
+            $product->image = $request->file('image')->store('products', 'public');
+        }
+        $product->save();
 
         return redirect()->route('products.index')->with('status','Product Updated Successfully');
     }
 
     public function destroy($id)
     {
-        $product = product::find($id);
+        $product = Product::find($id);
         $product->delete();
         return redirect()->back()->with('status','Product Deleted Successfully');
     }

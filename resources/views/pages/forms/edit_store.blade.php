@@ -51,6 +51,28 @@
                                         </div>
 
                                         <div class="col-md-12">
+                                            <label class="form-label">Code</label>
+                                            <input type="text" name="code" class="form-control" value="{{ old('code', $store->code) }}">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Address</label>
+                                            <input type="text" name="address" class="form-control" value="{{ old('address', $store->address) }}">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" name="phone" class="form-control" value="{{ old('phone', $store->phone) }}">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Notes</label>
+                                            <textarea name="notes" class="form-control" rows="2">{{ old('notes', $store->notes) }}</textarea>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="is_primary_stock_location" value="1" id="ps" {{ old('is_primary_stock_location', $store->is_primary_stock_location) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="ps">Primary stock location</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
                                             <label for="status" class="col-form-label text-md-start">{{ __('Status') }}<span class="text-danger">*</span></label>
                                             <select class="form-select @error('status') is-invalid @enderror"
                                             name="status" id="status" value="{{ old('status') }}">

@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Store;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
     public function index()
     {
+        $stores = Store::orderBy('name')->get();
 
-        $stores = DB::table('stores')->get();
         return view('pages.tables.storeTable', compact('stores'));
     }
 
@@ -22,46 +21,58 @@ class StoreController extends Controller
 
     public function store(Request $request)
     {
-		$storeData = [
-        'name' => $request->name,
-        'status' => $request->status];
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:32',
+            'address' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:64',
+            'notes' => 'nullable|string|max:2000',
+            'is_primary_stock_location' => 'nullable|boolean',
+            'status' => 'required|integer',
+        ]);
 
-		store::create($storeData);
+        Store::create([
+            'name' => $data['name'],
+            'code' => $data['code'] ?? null,
+            'address' => $data['address'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'is_primary_stock_location' => $request->boolean('is_primary_stock_location', true),
+            'status' => $data['status'],
+        ]);
 
-        return redirect()->route('stores.index')->with('status', 'store Created Successfully');
-
-    }
-
-    public function count($id)
-    {
-        $count = DB::table('stores')
-        ->where('id',$id)
-        ->count();
-        return view('admin.index', compact('count'));
-
-        // return view('PhotoFeed.PhotoDetails',['showCounts'=>$showCounts,'id'=>$id]);
+        return redirect()->route('stores.index')->with('status', 'Store created.');
     }
 
     public function edit($id)
     {
-        $store = store::find($id);
-        return view('pages\forms\edit_store', compact('store'));
+        $store = Store::findOrFail($id);
+
+        return view('pages.forms.edit_store', compact('store'));
     }
 
     public function update(Request $request, $id)
     {
-        $store = store::find($id);
-        $store->name = $request->input('name');
-        $store->status = $request->input('status');
-        $store->update();
+        $store = Store::findOrFail($id);
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:32',
+            'address' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:64',
+            'notes' => 'nullable|string|max:2000',
+            'status' => 'required|integer',
+        ]);
+        $store->fill($data);
+        $store->is_primary_stock_location = $request->boolean('is_primary_stock_location', false);
+        $store->save();
 
-        return redirect()->route('stores.index')->with('status','Store Updated Successfully');
+        return redirect()->route('stores.index')->with('status', 'Store updated.');
     }
 
     public function destroy($id)
     {
-        $store = Store::find($id);
-        $store->delete();
-        return redirect()->back()->with('status','Store Deleted Successfully');
+        Store::findOrFail($id)->delete();
+
+        return redirect()->back()->with('status', 'Store removed.');
     }
 }

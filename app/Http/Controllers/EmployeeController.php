@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,38 +24,38 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
-        request()->validate([
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-       ]);
+        $request->validate([
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'position_id' => 'nullable|exists:positions,id',
+        ]);
 
        $image_path = '';
        if ($request->hasFile('image')) {
-           $image_path = $request->file('image')->store('image', 'public');
+           $image_path = $request->file('image')->store('employees', 'public');
         }
         // $file = $request->file('image');
 		// $fileName = time() . '.' . $file->getClientOriginalExtension();
 		// $file->storeAs('public/images', $fileName);
 
-		$employeeData = [
+        $employeeData = [
+            'first_name' => $request->fname,
+            'last_name' => $request->lname,
+            'email' => $request->email,
+            'gender' => $request->gender,
+            'birthday' => $request->birthdate,
+            'phone' => $request->phone,
+            'mother_name' => $request->mother,
+            'father_name' => $request->father,
+            'country' => $request->country,
+            'city' => $request->city,
+            'address' => $request->address,
+            'image' => $image_path ?: 'default.png',
+            'position_id' => $request->input('position_id') ?: Position::query()->value('id'),
+        ];
 
-        'first_name' => $request->fname,
-        'last_name' => $request->lname,
-        'email' => $request->email,
-        'gender' => $request->gender,
-        'birthday' => $request->birthdate,
-        'phone' => $request->phone,
-        'mother_name' => $request->mother,
-        'father_name' => $request->father,
-        'country' => $request->country,
-        'city' => $request->city,
-        'address' => $request->address,
-        'image' => $image_path];
+        Employee::create($employeeData);
 
-		employee::create($employeeData);
-
-        // return redirect()->route('employees.index')->with('status', 'employee Created Successfully');
-        return redirect()->route('employees.index');
-        Alert::success('Congrats', 'employee Created Successfully');
+        return redirect()->route('employees.index')->with('status', 'Employee created successfully.');
 
 		// return response()->json(['status','employee Added Successfully']);
     }
@@ -66,13 +67,13 @@ class EmployeeController extends Controller
 
     public function edit($id)
     {
-        $employee = employee::find($id);
+        $employee = Employee::find($id);
         return view('pages\forms\edit_employee', compact('employee'));
     }
 
     public function update(Request $request, $id)
     {
-        $employee = employee::find($id);
+        $employee = Employee::find($id);
         $employee->first_name = $request->input('fname');
         $employee->last_name = $request->input('lname');
         $employee->email = $request->input('email');
@@ -92,7 +93,7 @@ class EmployeeController extends Controller
 
     public function destroy($id)
     {
-        $employee = employee::find($id);
+        $employee = Employee::find($id);
         $employee->delete();
         return redirect()->back()->with('status','Employee Deleted Successfully');
     }

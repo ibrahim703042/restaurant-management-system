@@ -1,92 +1,80 @@
-
 <div class="container-fluid px-4">
     <h1 class="mt-4">Dashboard</h1>
     <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item active">Dashboard</li>
+        <li class="breadcrumb-item active">Overview</li>
     </ol>
-    <div class="row">
+    <div class="row g-3 mb-4">
         <div class="col-xl-3 col-md-6">
-            {{--  <!--count items-->  --}}
-            <div class="card mb-4">
-                <div class="card-body bg-primary text-white d-flex  justify-content-between">
-                    <div class="d-flex flex-column">
-                        <h2 class="body-title">
-                            12
-                        </h2>
-                        <p>Order</p>
-                    </div>
-                    <div class="text-grey">
-                        <i class="fas fa-cutlery fa-3x"></i>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0d6efd !important;">
+                <div class="card-body">
+                    <div class="text-muted small">Today income</div>
+                    <h3 class="mb-0">{{ number_format($stats['income_today'], 0) }}</h3>
                 </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-primary stretched-link text-decoration-none" href="#">View Details</a>
-                    <div class="small text-primary"><i class="fas fa-arrow-circle-right"></i></div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #198754 !important;">
+                <div class="card-body">
+                    <div class="text-muted small">This week</div>
+                    <h3 class="mb-0">{{ number_format($stats['income_week'], 0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #6f42c1 !important;">
+                <div class="card-body">
+                    <div class="text-muted small">This month</div>
+                    <h3 class="mb-0">{{ number_format($stats['income_month'], 0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important;">
+                <div class="card-body">
+                    <div class="text-muted small">Client debt total</div>
+                    <h3 class="mb-0">{{ number_format($stats['unpaid_debts'], 0) }}</h3>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>
-            DataTable Example
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm"><div class="card-body text-center">
+                <i class="fas fa-receipt fa-2x text-primary mb-2"></i>
+                <h4>{{ $stats['orders_total'] }}</h4>
+                <span class="text-muted">Total orders</span>
+            </div></div>
         </div>
-        <div class="card-body">
-            <table id="datatablesSimple">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Position</th>
-                        <th>Office</th>
-                        <th>Age</th>
-                        <th>Start date</th>
-                        <th>Salary</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <th>Name</th>
-                        <th>Position</th>
-                        <th>Office</th>
-                        <th>Age</th>
-                        <th>Start date</th>
-                        <th>Salary</th>
-                    </tr>
-                </tfoot>
+        <div class="col-md-4">
+            <div class="card shadow-sm"><div class="card-body text-center">
+                <i class="fas fa-user-friends fa-2x text-success mb-2"></i>
+                <h4>{{ $stats['clients_total'] }}</h4>
+                <span class="text-muted">Clients</span>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm"><div class="card-body text-center">
+                <a href="{{ route('pos.index') }}" class="btn btn-warning btn-lg w-100"><i class="fas fa-cash-register me-2"></i>Open POS</a>
+            </div></div>
+        </div>
+    </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><i class="fas fa-history me-1"></i> Recent payments</div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>When</th><th>Amount</th><th>Method</th><th>Client</th><th>By</th></tr></thead>
                 <tbody>
+                    @forelse ($recentPayments as $p)
                     <tr>
-                        <td>Tiger Nixon</td>
-                        <td>System Architect</td>
-                        <td>Edinburgh</td>
-                        <td>61</td>
-                        <td>2011/04/25</td>
-                        <td>$320,800</td>
+                        <td>{{ $p->created_at->format('Y-m-d H:i') }}</td>
+                        <td>{{ number_format($p->amount, 0) }}</td>
+                        <td>{{ $p->payment_method }}</td>
+                        <td>{{ $p->client?->name ?? '—' }}</td>
+                        <td>{{ $p->user->name }}</td>
                     </tr>
-                    <tr>
-                        <td>Garrett Winters</td>
-                        <td>Accountant</td>
-                        <td>Tokyo</td>
-                        <td>63</td>
-                        <td>2011/07/25</td>
-                        <td>$170,750</td>
-                    </tr>
-                    <tr>
-                        <td>Ashton Cox</td>
-                        <td>Junior Technical Author</td>
-                        <td>San Francisco</td>
-                        <td>66</td>
-                        <td>2009/01/12</td>
-                        <td>$86,000</td>
-                    </tr>
-                    <tr>
-                        <td>Cedric Kelly</td>
-                        <td>Senior Javascript Developer</td>
-                        <td>Edinburgh</td>
-                        <td>22</td>
-                        <td>2012/03/29</td>
-                        <td>$433,060</td>
-                    </tr>
+                    @empty
+                    <tr><td colspan="5" class="text-center text-muted py-4">No payments yet. Complete a sale in POS.</td></tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

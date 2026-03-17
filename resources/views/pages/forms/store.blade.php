@@ -52,6 +52,28 @@
                                         </div>
 
                                         <div class="col-md-12">
+                                            <label class="form-label">Code (optional)</label>
+                                            <input type="text" name="code" class="form-control" value="{{ old('code') }}" placeholder="e.g. BRN-01">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Address</label>
+                                            <input type="text" name="address" class="form-control" value="{{ old('address') }}">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Notes</label>
+                                            <textarea name="notes" class="form-control" rows="2">{{ old('notes') }}</textarea>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="is_primary_stock_location" value="1" id="primaryStock" checked>
+                                                <label class="form-check-label" for="primaryStock">Primary stock location for this branch</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
                                             <label for="status" class="col-form-label text-md-start">{{ __('Status') }}<span class="text-danger">*</span></label>
                                             <select class="form-select @error('status') is-invalid @enderror"
                                             name="status" id="status" value="{{ old('status') }}"  required>

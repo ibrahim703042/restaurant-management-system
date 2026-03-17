@@ -1,194 +1,50 @@
 @extends('layouts.admin')
-
 @section('main-section')
-
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Form</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item">
-            <a href="{{ url('/') }}">
-                Dashboard
-            </a>
-        </li>
-        <li class="breadcrumb-item active">
-            Add user
-        </li>
-    </ol>
-
-    <body class="bg-light">
-
-        <div class="row">
-            <div class="card mb-1 bg-light">
-                <div class="card-body">
-
-                    <form method="POST" id="add_student" enctype="multipart/form-data" action="{{ url('/')}}/store">
-                        @csrf
-                            <div class="row g-3">
-                                <div class="col-md-2 border-right">
-                                    <div class="d-flex flex-column align-items-center text-center p-3 py-2">
-                                        <img class="rounded-circle mt-2" width="100px"
-                                            src="https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg">
-
-                                        {{--  <!--upload image-->  --}}
-                                        <input type="file" id="image" name="image" class="form-control @error('image') is-invalid @enderror" required>
-
-                                    </div>
-                                </div>
-
-                                <div class="col-md-5 mt-2 border-right">
-
-                                    <div class="row g-2">
-
-                                        <div class="col-md-6">
-                                            <label for="fname" class="col-md-12 col-form-label text-md-start">{{ __('First name') }}<span class="text-danger">*</span></label>
-                                            <input id="fname" required type="text" class="form-control @error('fname') is-invalid @enderror" name="fname"  placeholder=" Enter first name" value="{{ old('fname') }}" autocomplete="fname" autofocus>
-
-                                            @error('fname')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="lname" class="col-md-12 col-form-label text-md-start">{{ __('Last name') }}<span class="text-danger">*</span></label>
-                                            <input id="lname" required type="text" class="form-control @error('lname') is-invalid @enderror" name="lname" placeholder=" Enter last name" value="{{ old('lname') }}" autocomplete="lname" autofocus>
-
-                                            @error('lname')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="email" class="col-md-12 col-form-label text-md-start">{{ __('Email Address') }}<span class="text-danger">*</span></label>
-                                            <input id="email" required type="email" class="form-control @error('email') is-invalid @enderror" name="email"  placeholder=" @biu.bi" value="{{ old('email') }}" autocomplete="email">
-
-                                            @error('email')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="gender" class="col-form-label text-md-start">{{ __('Gender') }}<span class="text-danger">*</span></label>
-                                            <select id="gender" required class="form-control @error('gender') is-invalid @enderror" name="gender" id="gender" value="{{ old('gender') }}">
-                                                <option value="" disabled>Choose your gender</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            @error('gender')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="bithdate" class="col-md-12 col-form-label text-md-start">{{ __('Birth day') }}<span class="text-danger">*</span></label>
-                                            <input required type="date" class="form-control @error('birthdate') is-invalid @enderror" name="birthdate" id="birthdate" value="{{ old('birthdate') }}">
-                                            @error('birthdate')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="phone" class="col-md-12 col-form-label text-md-start">{{ __('Phone') }}<span class="text-danger">*</span></label>
-                                            <input required id="phone" type="phone" class="form-control @error('phone') is-invalid @enderror"  placeholder=" Enter phone" name="phone" value="{{ old('phone') }}" autocomplete="phone" autofocus>
-
-                                            @error('phone')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-5 mt-2 border-right">
-
-                                    <div class="row g-2">
-
-                                        <div class="col-md-12">
-                                            <label for="name" class="col-md-12 col-form-label text-md-start">{{ __('Mother Name') }}<span class="text-danger">*</span></label>
-                                            <input id="mother" required type="text" class="form-control @error('mother') is-invalid @enderror"  placeholder=" Enter mother name" name="mother" value="{{ old('mother') }}" autocomplete="mother" autofocus>
-
-                                            @error('mother')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="father" class="col-md-12 col-form-label text-md-start">{{ __('Father') }}<span class="text-danger">*</span></label>
-                                            <input id="father" required type="text" class="form-control @error('father') is-invalid @enderror" placeholder=" Enter father name" name="father" value="{{ old('father') }}" autocomplete="father" autofocus>
-
-                                            @error('father')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="country" class="col-md-12 col-form-label text-md-start">{{ __('Country') }}<span class="text-danger">*</span></label>
-                                            <input id="country" required type="text" class="form-control @error('country') is-invalid @enderror"  placeholder=" Enter Country" name="country" value="{{ old('country') }}" autocomplete="country" autofocus>
-
-                                            @error('country')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="city" class="col-md-12 col-form-label text-md-start">{{ __('City') }}<span class="text-danger">*</span></label>
-                                            <input id="city" required type="text" class="form-control @error('city') is-invalid @enderror" placeholder=" Enter City" name="city" value="{{ old('city') }}" autocomplete="city" autofocus>
-
-                                            @error('city')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <label for="address" class="col-md-12 col-form-label text-md-start">{{ __('Address') }}<span class="text-danger">*</span></label>
-                                            <input id="address" required type="text" class="form-control @error('address') is-invalid @enderror" placeholder="Enter address" name="address" value="{{ old('address') }}" autocomplete="address" autofocus>
-
-                                            @error('address')
-                                                <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
-                                                </span>
-                                            @enderror
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                                <div class="d-flex flex-column align-items-end p-3 py-2 ">
-                                    <button type="submit"  class="btn btn-dark">
-                                        {{ __('Add user') }}
-                                    </button>
-                                </div>
-
-                            </div>
-
-                    </form>
-                </div>
-            </div>
+<div class="container-fluid px-4" style="max-width:560px">
+    <h1 class="mt-4">Add user account</h1>
+    <p class="text-muted small">Employees who should log in: pick their record below (optional). Others stay staff-only.</p>
+    @if ($errors->any())
+        <div class="alert alert-danger">{{ $errors->first() }}</div>
+    @endif
+    <form method="post" action="{{ route('users.store') }}" class="card card-body mt-3">
+        @csrf
+        <div class="mb-3">
+            <label class="form-label">Full name</label>
+            <input name="name" class="form-control" required value="{{ old('name') }}">
         </div>
-
-    </body>
-
+        <div class="mb-3">
+            <label class="form-label">Email (login)</label>
+            <input type="email" name="email" class="form-control" required value="{{ old('email') }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required minlength="6">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Confirm password</label>
+            <input type="password" name="password_confirmation" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select" required>
+                @foreach ($roles as $r)
+                <option value="{{ $r }}" {{ old('role') === $r ? 'selected' : '' }}>{{ $r }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Link employee (optional)</label>
+            <select name="employee_id" class="form-select">
+                <option value="">— No employee link —</option>
+                @foreach ($employeesWithoutLogin as $e)
+                <option value="{{ $e->id }}" {{ old('employee_id') == $e->id ? 'selected' : '' }}>
+                    {{ $e->first_name }} {{ $e->last_name }} ({{ $e->email }})
+                </option>
+                @endforeach
+            </select>
+        </div>
+        <button class="btn btn-primary">Create user</button>
+        <a href="{{ route('users.index') }}" class="btn btn-link">Cancel</a>
+    </form>
 </div>
-
 @endsection

@@ -51,6 +51,14 @@
                                         </div>
 
                                         <div class="col-md-12">
+                                            <label class="form-label">Section</label>
+                                            <input type="text" name="section" class="form-control" value="{{ old('section', $table->section) }}">
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Sort order</label>
+                                            <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', $table->sort_order ?? 0) }}" min="0">
+                                        </div>
+                                        <div class="col-md-12">
                                             <label for="capacity" class="col-md-12 col-form-label text-md-start">{{ __('Capacity') }}<span class="text-danger">*</span></label>
                                             <input type="text" class="form-control @error('capacity') is-invalid @enderror"
                                             name="capacity" id="capacity" value="{{$table->capacity}}">
@@ -99,7 +107,7 @@
                                             <option value="" disabled>Choose to update</option>
 
                                             @foreach (DB::table('stores')->get() as $item)
-                                                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                                <option value="{{ $item->id }}" {{ (string)$table->store_id === (string)$item->id ? 'selected' : '' }}>{{ $item->name }}</option>
                                             @endforeach
 
                                             </select>

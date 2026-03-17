@@ -20,21 +20,19 @@
                     <i class="fas fa-users me-1"></i>
                     Manage user
                 </h3>
-                <button class="btn btn-primary shadow" data-bs-toggle="modal" data-bs-target="#addStatusModal">
-                    <i class=" fa fa-plus-circle me-2"></i>
-                Add new user
-                </button>
+                <a href="{{ route('user.create') }}" class="btn btn-primary shadow"><i class="fa fa-plus-circle me-2"></i>Add user</a>
 
             </div>
             <div class="card-body">
                 <table id="datatablesSimple">
                     <thead>
                         <tr>
-                            <th> # </th>
-                            <th> Name</th>
-                            <th> E-mail</th>
-                            <th colspan="2"> Action</th>
-
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Roles</th>
+                            <th>Employee</th>
+                            <th colspan="2">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,6 +41,8 @@
                                 <td>{{ $item->id }}</td>
                                 <td>{{ $item->name }}</td>
                                 <td>{{ $item->email }}</td>
+                                <td>{{ $item->getRoleNames()->implode(', ') }}</td>
+                                <td>@if($item->employee) {{ $item->employee->first_name }} {{ $item->employee->last_name }} @else — @endif</td>
                                 <td>
                                     <a href="#" id="" class="text-decoration-none text-success mx-1 editIcon" data-bs-toggle="modal"
                                         data-bs-target="#editTeacherModal">
@@ -59,9 +59,8 @@
                     </tbody>
 
                 </table>
+                {{ $users->links() }}
             </div>
         </div>
     </div>
-
-</div>
 @endsection
