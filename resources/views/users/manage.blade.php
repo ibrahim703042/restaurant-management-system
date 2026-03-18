@@ -6,16 +6,43 @@
 <li class="breadcrumb-item active">Users</li>
 @endsection
 @section('main-section')
-<x-admin.table-card title="App users" icon="fas fa-users-cog">
-    <x-slot:actions>
-        <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add user</button>
-    </x-slot:actions>
-    <thead class="table-light"><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Employee</th><th style="width:180px">Actions</th></tr></thead>
-</x-admin.table-card>
+<div class="container-fluid px-lg-4 pb-4">
+    <x-admin.page-actions title="Users">
+        <x-slot:actions>
+            <button type="button" class="btn btn-dt-pro-primary btn-sm" id="btnAdd">
+                <i class="fas fa-plus me-1"></i>Add user
+            </button>
+        </x-slot:actions>
+    </x-admin.page-actions>
+
+    <x-admin.data-table-pro>
+        <x-slot:toolbar>
+            <div class="dt-pro-toolbar-split">
+                <div class="dt-pro-search-wrap">
+                    <i class="fas fa-search dt-pro-search-icon"></i>
+                    <input type="search" class="form-control form-control-sm" id="dtSearchInput" placeholder="Search users…">
+                </div>
+            </div>
+        </x-slot:toolbar>
+        <table id="dt-table" class="table align-middle w-100 mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Employee</th>
+                    <th class="text-end pe-4" style="width:180px">Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </x-admin.data-table-pro>
+</div>
+
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalTitle">Add user</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-content dt-pro-modal">
+            <div class="modal-header"><h5 class="modal-title fw-bold" id="modalTitle">Add user</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <form id="form">@csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
@@ -42,7 +69,10 @@
                         <p class="small text-muted mb-0" id="editPwHint">Leave password blank to keep current.</p>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dt-pro-primary rounded-pill px-4">Save</button>
+                </div>
             </form>
         </div>
     </div>
@@ -81,8 +111,17 @@
             { data: 'id' }, { data: 'name' }, { data: 'email' }, { data: 'role' }, { data: 'employee' },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[1, 'asc']]
+        order: [[1, 'asc']],
+        dom: 'rtip'
     });
+
+    var searchInput = document.getElementById('dtSearchInput');
+    var searchTimer = null;
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () { dt.search(searchInput.value).draw(); }, 350);
+    });
+
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });
     function tsClear(sel) { if (sel && sel.tomselect) sel.tomselect.clear(true); }

@@ -1,24 +1,3 @@
-@push('styles')
-<style>
-    .dash-hero-stat {
-        border-radius: 1rem;
-        border: none;
-        overflow: hidden;
-        transition: transform .2s ease, box-shadow .2s ease;
-    }
-    .dash-hero-stat:hover { transform: translateY(-2px); box-shadow: 0 .75rem 2rem rgba(0,0,0,.08) !important; }
-    .dash-hero-stat .stat-inner { padding: 1.35rem 1.5rem; position: relative; }
-    .dash-hero-stat .stat-icon {
-        width: 3rem; height: 3rem; border-radius: .75rem;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.25rem; opacity: .95;
-    }
-    .dash-hero-stat .stat-value { font-size: 1.65rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
-    .dash-hero-stat .stat-label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; opacity: .85; }
-    .dash-pay-row:hover { background: rgba(60, 141, 188, .04); }
-    .dash-pay-avatar { width: 38px; height: 38px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
-</style>
-@endpush
 
 <div class="container-fluid px-lg-4">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">

@@ -148,4 +148,11 @@ class EmployeeLeaveController extends Controller
 
         return response()->json(['message' => 'Leave record removed.']);
     }
+
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = EmployeeLeave::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
 }

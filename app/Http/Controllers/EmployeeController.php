@@ -132,6 +132,13 @@ class EmployeeController extends Controller
         return redirect()->route('employees.index')->with('status', 'Employee removed.');
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = \App\Models\Employee::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     private function validatedEmployee(Request $request, bool $isCreate, ?Employee $employee): array
     {
         $emailRules = ['required', 'email', 'max:255', Rule::unique('employees', 'email')];

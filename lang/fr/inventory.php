@@ -40,4 +40,11 @@ return [
     'coming_soon' => 'Bientôt',
     'page' => 'page',
     'col_status' => 'État',
+    'recent_movements' => 'Mouvements récents',
+    'movement_date' => 'Date',
+    'movement_type' => 'Type',
+    'movement_in' => 'Entrée',
+    'movement_out' => 'Sortie',
+    'movement_user' => 'Utilisateur',
+    'movement_notes' => 'Notes',
 ];

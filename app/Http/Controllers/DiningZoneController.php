@@ -116,6 +116,14 @@ class DiningZoneController extends Controller
         return $this->jsonOk($request, ['message' => 'Zone removed.'], redirect()->route('dining-zones.index')->with('status', 'Zone removed.'));
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = DiningZone::whereIn('id', $data['ids'])->delete();
+
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     private function jsonOk(Request $request, array $json, $redirect)
     {
         if ($request->wantsJson() || $request->ajax()) {

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'POS')
-@section('page-title', 'Point of Sale')
+@section('title', __('pos.title'))
+@section('page-title', __('pos.title'))
 
 @push('styles')
 <link href="{{ asset('css/pos.css') }}?v=4" rel="stylesheet">
@@ -17,7 +17,7 @@
 
     <form method="post" action="{{ route('pos.set-store') }}" class="mb-3 d-flex flex-wrap align-items-center gap-2 bg-light rounded p-2">
         @csrf
-        <label class="form-label mb-0 fw-bold"><i class="fas fa-store me-1"></i>Magasin (stock)</label>
+        <label class="form-label mb-0 fw-bold"><i class="fas fa-store me-1"></i>{{ __('pos.store_label') }}</label>
         <select name="store_id" class="form-select form-select-sm" style="max-width:280px" onchange="this.form.submit()">
             @foreach ($stores as $s)
             <option value="{{ $s->id }}" @selected((int)$posStoreId === (int)$s->id)>{{ $s->name }}</option>
@@ -28,6 +28,7 @@
     <form action="{{ route('pos.checkout') }}" method="post" id="pos-form">
         @csrf
         <input type="hidden" name="store_id" value="{{ $posStoreId }}">
+        <input type="hidden" name="table_id" id="f_table_id" value="">
         <input type="hidden" name="client_id" id="f_client_id" value="">
         <input type="hidden" name="payment_method" id="f_payment_method" value="cash">
         <input type="hidden" name="amount_paid" id="f_amount_paid" value="0">
@@ -43,10 +44,10 @@
             <div class="col-12 col-lg-8 col-xl-8 pos-products-column">
                 <div class="pos-category-wrap mb-2 {{ $manyPosCategories ? 'pos-category-wrap--many' : '' }}">
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                        <span class="pos-category-label text-muted small text-uppercase fw-semibold d-none d-md-inline mb-0">{{ __('Categories') }}</span>
+                        <span class="pos-category-label text-muted small text-uppercase fw-semibold d-none d-md-inline mb-0">{{ __('pos.categories') }}</span>
                         @if ($manyPosCategories)
                             <button type="button" class="btn btn-sm btn-primary w-100 w-md-auto ms-md-auto flex-shrink-0" data-bs-toggle="modal" data-bs-target="#posCategoriesModal">
-                                <i class="fas fa-th-large me-1"></i>{{ __('All categories') }}
+                                <i class="fas fa-th-large me-1"></i>{{ __('pos.all_categories') }}
                                 <span class="badge bg-light text-primary ms-1">{{ $posCatCount }}</span>
                             </button>
                         @endif
@@ -67,8 +68,8 @@
                     @if ($manyPosCategories)
                         <p class="pos-category-scroll-hint small text-muted mb-0 mt-1">
                             <i class="fas fa-hand-pointer me-1"></i>
-                            <span class="d-none d-md-inline">{{ __('Scroll inside the box to see more categories, or use') }} <strong>{{ __('All categories') }}</strong>.</span>
-                            <span class="d-md-none">{{ __('Swipe sideways for more, or tap') }} <strong>{{ __('All categories') }}</strong>.</span>
+                            <span class="d-none d-md-inline">{{ __('pos.scroll_hint_desktop') }} <strong>{{ __('pos.all_categories') }}</strong>.</span>
+                            <span class="d-md-none">{{ __('pos.scroll_hint_mobile') }} <strong>{{ __('pos.all_categories') }}</strong>.</span>
                         </p>
                     @endif
                 </div>
@@ -76,7 +77,7 @@
                 <div class="tab-content pos-tab-content">
                     @foreach ($posCategories as $ci => $cat)
                         <div class="tab-pane fade {{ $ci === 0 ? 'show active' : '' }}" id="cat-{{ $cat->id }}">
-                            <p class="text-muted small mb-2 d-none d-md-block">{{ __('Tap to add') }} · {{ $cat->products->count() }} {{ __('items') }}</p>
+                            <p class="text-muted small mb-2 d-none d-md-block">{{ __('pos.tap_to_add') }} · {{ $cat->products->count() }} {{ __('pos.items') }}</p>
                             <div class="pos-product-grid" role="list">
                                 @foreach ($cat->products as $p)
                                     <button type="button" role="listitem"
@@ -106,7 +107,7 @@
 
         <div class="offcanvas offcanvas-bottom pos-offcanvas-cart d-lg-none" tabindex="-1" id="posCartCanvas" style="height: 88vh; max-height: 100dvh;">
             <div class="offcanvas-header border-bottom py-2">
-                <h5 class="offcanvas-title mb-0"><i class="fas fa-shopping-cart me-2"></i>Order</h5>
+                <h5 class="offcanvas-title mb-0"><i class="fas fa-shopping-cart me-2"></i>{{ __('pos.order') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
             </div>
             <div class="offcanvas-body pt-2">
@@ -122,11 +123,11 @@
         <div class="modal-dialog modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <div class="modal-header py-2">
-                    <h5 class="modal-title" id="posCategoriesModalLabel"><i class="fas fa-layer-group me-2"></i>{{ __('All categories') }}</h5>
+                    <h5 class="modal-title" id="posCategoriesModalLabel"><i class="fas fa-layer-group me-2"></i>{{ __('pos.all_categories') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="small text-muted mb-3">{{ __('Tap a category to show its products.') }}</p>
+                    <p class="small text-muted mb-3">{{ __('pos.tap_category') }}</p>
                     <div class="row g-2">
                         @foreach ($posCategories as $cat)
                         <div class="col-6 col-sm-4 col-md-3">
@@ -146,12 +147,12 @@
 
     <div class="pos-mobile-bar d-lg-none">
         <div>
-            <div class="small text-white-50">Total</div>
+            <div class="small text-white-50">{{ __('pos.total') }}</div>
             <div class="pos-total" id="cart-total-bar">0</div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
             <span class="badge bg-light text-dark" id="cart-count-bar">0</span>
-            <button type="button" class="btn btn-warning fw-bold px-3" data-bs-toggle="offcanvas" data-bs-target="#posCartCanvas">Cart &amp; pay</button>
+            <button type="button" class="btn btn-warning fw-bold px-3" data-bs-toggle="offcanvas" data-bs-target="#posCartCanvas">{{ __('pos.cart_pay') }}</button>
         </div>
     </div>
 </div>
@@ -163,22 +164,30 @@
     const holder = document.getElementById('items-json');
     const totalBar = document.getElementById('cart-total-bar');
     const countBar = document.getElementById('cart-count-bar');
+    const fTable = document.getElementById('f_table_id');
     const fClient = document.getElementById('f_client_id');
     const fPay = document.getElementById('f_payment_method');
     const fPaid = document.getElementById('f_amount_paid');
 
     function bindCheckoutSync(suffix) {
+        const tb = document.getElementById('sel-table' + suffix);
         const c = document.getElementById('sel-client' + suffix);
         const p = document.getElementById('sel-pay' + suffix);
         const a = document.getElementById('inp-paid' + suffix);
         const t = document.getElementById('cart-total' + suffix);
+        if (tb) tb.addEventListener('change', () => { fTable.value = tb.value; syncOtherTable(suffix === '-m'); });
         if (c) c.addEventListener('change', () => { fClient.value = c.value; if (suffix === '') syncOtherClient(); else syncOtherClient(true); });
         if (p) p.addEventListener('change', () => { fPay.value = p.value; syncPay(); });
         if (a) a.addEventListener('input', () => { fPaid.value = a.value; });
-        return { c, p, a, t };
+        return { tb, c, p, a, t };
     }
     const d = bindCheckoutSync('');
     const m = bindCheckoutSync('-m');
+    function syncOtherTable(fromMobile) {
+        const src = fromMobile ? m.tb : d.tb;
+        const dst = fromMobile ? d.tb : m.tb;
+        if (src && dst) dst.value = src.value;
+    }
     function syncOtherClient(fromMobile) {
         const src = fromMobile ? m.c : d.c;
         const dst = fromMobile ? d.c : m.c;
@@ -256,12 +265,14 @@
         render();
     });
     document.getElementById('pos-form').addEventListener('submit', () => {
-        if (d.c) fClient.value = d.c.value;
-        if (m.c && window.innerWidth < 992) fClient.value = m.c.value;
         if (window.innerWidth < 992) {
+            if (m.tb) fTable.value = m.tb.value;
+            if (m.c) fClient.value = m.c.value;
             if (m.p) fPay.value = m.p.value;
             if (m.a) fPaid.value = m.a.value;
         } else {
+            if (d.tb) fTable.value = d.tb.value;
+            if (d.c) fClient.value = d.c.value;
             if (d.p) fPay.value = d.p.value;
             if (d.a) fPaid.value = d.a.value;
         }

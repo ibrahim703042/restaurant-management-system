@@ -133,6 +133,13 @@ class StoreController extends Controller
         return $this->jsonOk($request, ['message' => 'Store removed.'], redirect()->route('stores.index')->with('status', 'Store removed.'));
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = \App\Models\Store::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     private function jsonOk(Request $request, array $json, $redirect)
     {
         if ($request->wantsJson() || $request->ajax()) {

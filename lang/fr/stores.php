@@ -1,0 +1,21 @@
+<?php
+return [
+    'title' => 'Magasins',
+    'add' => 'Ajouter un magasin',
+    'edit' => 'Modifier le magasin',
+    'col_name' => 'Nom',
+    'col_code' => 'Code',
+    'col_phone' => 'Téléphone',
+    'col_primary_stock' => 'Stock principal',
+    'col_status' => 'Statut',
+    'label_name' => 'Nom',
+    'label_code' => 'Code',
+    'label_phone' => 'Téléphone',
+    'label_status' => 'Statut',
+    'label_address' => 'Adresse',
+    'label_notes' => 'Notes',
+    'label_primary_stock' => 'Lieu de stock principal',
+    'confirm_delete' => 'Supprimer le magasin ?',
+    'cannot_delete' => 'Impossible de supprimer — des dépendances existent.',
+    'search' => 'Rechercher des magasins…',
+];

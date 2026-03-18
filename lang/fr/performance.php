@@ -1,0 +1,21 @@
+<?php
+return [
+    'title' => 'Performance des serveurs',
+    'subtitle' => 'Évaluations de performance',
+    'add' => 'Ajouter une évaluation',
+    'edit' => 'Modifier l\'évaluation',
+    'col_employee' => 'Employé',
+    'col_period' => 'Période',
+    'col_rating' => 'Note',
+    'col_tables' => 'Tables',
+    'col_sales' => 'Ventes',
+    'label_employee' => 'Employé',
+    'label_rating' => 'Note (1–5)',
+    'label_period_start' => 'Début de période',
+    'label_period_end' => 'Fin de période',
+    'label_tables' => 'Tables servies',
+    'label_sales' => 'Total des ventes',
+    'label_comment' => 'Commentaire',
+    'confirm_delete' => 'Supprimer ?',
+    'search' => 'Rechercher les performances…',
+];

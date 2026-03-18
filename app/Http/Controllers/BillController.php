@@ -64,7 +64,7 @@ class BillController extends Controller
 
     public function show(Bill $bill)
     {
-        $bill->load(['order.items.product', 'order.client', 'payments', 'debts']);
+        $bill->load(['order.items.product', 'order.client', 'order.diningTable', 'payments', 'debts']);
         $verifyUrl = $bill->verifyUrl();
         $qrSvg = QrCodeSvg::forData($verifyUrl, 180, 6);
 
@@ -73,7 +73,7 @@ class BillController extends Controller
 
     public function printView(Bill $bill)
     {
-        $bill->load(['order.items.product', 'order.client']);
+        $bill->load(['order.items.product', 'order.client', 'order.diningTable']);
         $verifyUrl = $bill->verifyUrl();
         $qrSvg = QrCodeSvg::forData($verifyUrl, 140, 4);
 

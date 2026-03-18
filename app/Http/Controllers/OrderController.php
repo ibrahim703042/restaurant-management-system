@@ -86,6 +86,13 @@ class OrderController extends Controller
         return response()->json(['message' => __('orders.deleted')]);
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = Order::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     public function show(Order $order): View
     {
         $order->load(['items.product', 'client', 'user', 'bill.payments', 'bill.debts']);

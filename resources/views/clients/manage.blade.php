@@ -1,32 +1,63 @@
 @extends('layouts.admin')
-@section('title', 'Clients')
-@section('page-title', 'Clients')
+@section('title', __('clients.title'))
+@section('page-title', __('clients.title'))
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Home</a></li>
-<li class="breadcrumb-item active">Clients</li>
+<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">{{ __('common.home') }}</a></li>
+<li class="breadcrumb-item active">{{ __('clients.title') }}</li>
 @endsection
 @section('main-section')
-<x-admin.table-card title="Clients" icon="fas fa-user-friends">
-    <x-slot:actions>
-        <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add client</button>
-    </x-slot:actions>
-    <x-slot:filters>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Reload table</button>
-    </x-slot:filters>
-    <thead class="table-light"><tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th><th style="width:160px">Actions</th></tr></thead>
-</x-admin.table-card>
+<div class="container-fluid px-lg-4 pb-4">
+    <x-admin.page-actions :title="__('clients.title')">
+        <x-slot:actions>
+            <button type="button" class="btn btn-dt-pro-primary btn-sm" id="btnAdd">
+                <i class="fas fa-plus me-1"></i>{{ __('clients.add') }}
+            </button>
+        </x-slot:actions>
+    </x-admin.page-actions>
+
+    <x-admin.data-table-pro>
+        <x-slot:toolbar>
+            <div class="dt-pro-toolbar-split">
+                <div class="dt-pro-search-wrap">
+                    <i class="fas fa-search dt-pro-search-icon"></i>
+                    <input type="search" class="form-control form-control-sm" id="dtSearchInput" placeholder="{{ __('clients.search') }}">
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button class="btn btn-danger btn-sm d-none" id="btnBulkDel">
+                        <i class="fas fa-trash me-1"></i>{{ __('common.delete_selected') }} <span class="dt-pro-bulk-count badge bg-white text-danger ms-1"></span>
+                    </button>
+                </div>
+            </div>
+        </x-slot:toolbar>
+        <table id="dt-table" class="table align-middle w-100 mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width:42px"><input type="checkbox" class="form-check-input" id="dtCheckAll"></th>
+                    <th>{{ __('clients.col_name') }}</th>
+                    <th>{{ __('clients.col_phone') }}</th>
+                    <th>{{ __('clients.col_address') }}</th>
+                    <th class="text-end pe-4" style="width:160px">{{ __('common.actions') }}</th>
+                </tr>
+            </thead>
+        </table>
+    </x-admin.data-table-pro>
+</div>
+
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalTitle">Add client</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-content dt-pro-modal">
+            <div class="modal-header"><h5 class="modal-title fw-bold" id="modalTitle">{{ __('clients.add') }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <form id="form">@csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
-                    <x-admin.input name="name" label="Name" required />
-                    <x-admin.input name="phone" label="Phone" />
-                    <x-admin.textarea name="address" label="Address" rows="2" />
+                    <x-admin.input name="name" :label="__('clients.label_name')" required />
+                    <x-admin.input name="phone" :label="__('clients.label_phone')" />
+                    <x-admin.textarea name="address" :label="__('clients.label_address')" rows="2" />
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">{{ __('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-dt-pro-primary rounded-pill px-4">{{ __('common.save') }}</button>
+                </div>
             </form>
         </div>
     </div>
@@ -45,19 +76,31 @@
     const dt = $('#dt-table').DataTable({
         serverSide: true, ajax: { url: listUrl },
         columns: [
-            { data: 'id' }, { data: 'name' }, { data: 'phone' }, { data: 'address' },
+            { data: null, orderable: false, searchable: false, className: 'ps-4',
+              render: function(data, type, row) { return '<input type="checkbox" class="form-check-input dt-pro-row-check" value="' + row.id + '">'; } },
+            { data: 'name' }, { data: 'phone' }, { data: 'address' },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[0, 'desc']]
+        order: [[0, 'desc']],
+        dom: 'rtip'
     });
-    document.getElementById('btnApply').addEventListener('click', function () { dt.ajax.reload(); });
+
+    var searchInput = document.getElementById('dtSearchInput');
+    var searchTimer = null;
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () { dt.search(searchInput.value).draw(); }, 350);
+    });
+
+    dtProBulk({ dt: dt, bulkUrl: @json(route('clients.bulkDestroy')), csrfToken: csrf, confirmMsg: @json(__('common.confirm_bulk_delete')), deleteLabel: @json(__('common.delete')) });
+
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });
     document.getElementById('btnAdd').addEventListener('click', function () {
-        editingId = null; document.getElementById('modalTitle').textContent = 'Add client'; form.reset(); document.getElementById('formErrors').classList.add('d-none'); modal.show();
+        editingId = null; document.getElementById('modalTitle').textContent = @json(__('clients.add')); form.reset(); document.getElementById('formErrors').classList.add('d-none'); modal.show();
     });
     function openEdit(id) {
-        editingId = id; document.getElementById('modalTitle').textContent = 'Edit client'; document.getElementById('formErrors').classList.add('d-none');
+        editingId = id; document.getElementById('modalTitle').textContent = @json(__('clients.edit')); document.getElementById('formErrors').classList.add('d-none');
         fetch(base + '/' + id + '/json').then(r => r.json()).then(function (d) {
             var c = d.client; form.name.value = c.name; form.phone.value = c.phone || ''; form.address.value = c.address || ''; modal.show();
         });
@@ -69,16 +112,16 @@
         fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
             .then(async function (r) { var j = await r.json().catch(function () { return {}; });
                 if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : j.message; err.classList.remove('d-none'); return; }
-                modal.hide(); Swal.fire({ icon: 'success', title: j.message || 'Saved', timer: 1500, showConfirmButton: false }); dt.ajax.reload(null, false);
+                modal.hide(); Swal.fire({ icon: 'success', title: j.message || @json(__('common.saved')), timer: 1500, showConfirmButton: false }); dt.ajax.reload(null, false);
             });
     });
     function doDel(id) {
-        Swal.fire({ title: 'Remove client?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Delete' })
+        Swal.fire({ title: @json(__('clients.confirm_delete')), icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: @json(__('common.delete')) })
             .then(function (res) { if (!res.isConfirmed) return;
                 fetch(base + '/' + id, { method: 'DELETE', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(async function (r) { var j = await r.json().catch(function () { return {}; });
-                        if (!r.ok) { Swal.fire('Error', j.message || 'Cannot delete', 'error'); return; }
-                        Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
+                        if (!r.ok) { Swal.fire(@json(__('common.error')), j.message || @json(__('clients.cannot_delete')), 'error'); return; }
+                        Swal.fire({ icon: 'success', title: @json(__('common.removed')), timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
                     });
             });
     }

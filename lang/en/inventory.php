@@ -40,4 +40,11 @@ return [
     'coming_soon' => 'Coming soon',
     'page' => 'page',
     'col_status' => 'Status',
+    'recent_movements' => 'Recent movements',
+    'movement_date' => 'Date',
+    'movement_type' => 'Type',
+    'movement_in' => 'In',
+    'movement_out' => 'Out',
+    'movement_user' => 'User',
+    'movement_notes' => 'Notes',
 ];

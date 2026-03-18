@@ -15,4 +15,8 @@ return [
     'cancel' => 'Cancel',
     'confirm_delete' => 'Delete this order? Line items will be removed. This cannot be undone.',
     'delete_btn' => 'Delete',
+    'search' => 'Search orders…',
+    'col_client' => 'Client',
+    'col_total' => 'Total',
+    'col_date' => 'Date',
 ];

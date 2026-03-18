@@ -103,6 +103,13 @@ class ClientController extends Controller
         return $this->jsonOk($request, ['message' => 'Client removed.'], redirect()->route('clients.index')->with('status', 'Client removed.'));
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = \App\Models\Client::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     private function jsonOk(Request $request, array $json, $redirect)
     {
         if ($request->wantsJson() || $request->ajax()) {

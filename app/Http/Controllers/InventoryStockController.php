@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryStock;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class InventoryStockController extends Controller
 {
@@ -97,7 +99,17 @@ class InventoryStockController extends Controller
             $stocks = $base->orderBy('product_id')->paginate($perPage)->withQueryString();
         }
 
-        return view('inventory.index', compact('stores', 'stocks', 'storeId', 'units', 'summary'));
+        $recentMovements = collect();
+        if ($storeId && Schema::hasTable('stock_movements')) {
+            $recentMovements = StockMovement::query()
+                ->where('store_id', $storeId)
+                ->with(['product:id,product_name', 'user:id,name', 'unit:id,code'])
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get();
+        }
+
+        return view('inventory.index', compact('stores', 'stocks', 'storeId', 'units', 'summary', 'recentMovements'));
     }
 
     public function adjust(Request $request)
@@ -110,7 +122,7 @@ class InventoryStockController extends Controller
             'unit_id' => 'nullable|exists:units,id',
         ]);
 
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($data, $request) {
             $row = InventoryStock::query()->firstOrCreate(
                 ['store_id' => $data['store_id'], 'product_id' => $data['product_id']],
                 [
@@ -119,7 +131,9 @@ class InventoryStockController extends Controller
                     'unit_id' => Unit::query()->where('code', 'pcs')->value('id') ?? 1,
                 ]
             );
-            $row->quantity = max(0, (float) $row->quantity + (float) $data['delta']);
+
+            $delta = (float) $data['delta'];
+            $row->quantity = max(0, (float) $row->quantity + $delta);
             if ($request->filled('reorder_level')) {
                 $row->reorder_level = $data['reorder_level'];
             }
@@ -127,6 +141,20 @@ class InventoryStockController extends Controller
                 $row->unit_id = $data['unit_id'];
             }
             $row->save();
+
+            if (Schema::hasTable('stock_movements') && $delta != 0) {
+                StockMovement::create([
+                    'store_id' => $data['store_id'],
+                    'product_id' => $data['product_id'],
+                    'user_id' => auth()->id(),
+                    'type' => $delta >= 0 ? 'in' : 'out',
+                    'quantity' => abs($delta),
+                    'unit_id' => $row->unit_id,
+                    'notes' => $delta >= 0
+                        ? 'Stock in: +'.abs($delta)
+                        : 'Stock out: -'.abs($delta),
+                ]);
+            }
         });
 
         $query = array_filter([

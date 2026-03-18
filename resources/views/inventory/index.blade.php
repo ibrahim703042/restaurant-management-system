@@ -42,36 +42,28 @@
 
     <x-admin.data-table-pro>
         <x-slot:toolbar>
-            <form method="get" class="row g-2 g-lg-3 align-items-center flex-lg-nowrap">
-                <div class="col-12 col-lg-auto flex-grow-1 flex-lg-grow-0">
-                    <div class="dt-pro-search-wrap">
-                        <i class="fas fa-search dt-pro-search-icon"></i>
-                        <input type="search" name="q" class="form-control form-control-sm" value="{{ request('q') }}" placeholder="{{ __('inventory.search_placeholder') }}">
-                    </div>
+            <form method="get" class="dt-pro-toolbar-split">
+                <div class="dt-pro-search-wrap">
+                    <i class="fas fa-search dt-pro-search-icon"></i>
+                    <input type="search" name="q" class="form-control form-control-sm" value="{{ request('q') }}" placeholder="{{ __('inventory.search_placeholder') }}">
                 </div>
-                <div class="col-6 col-lg-auto">
-                    <select name="status" class="form-select form-select-sm">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <select name="store_id" class="form-select form-select-sm dt-pro-filter-select" onchange="this.form.submit()">
+                        @foreach ($stores as $s)
+                        <option value="{{ $s->id }}" @selected((string) $storeId === (string) $s->id)>{{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="status" class="form-select form-select-sm dt-pro-filter-select">
                         <option value="">{{ __('inventory.filter_all') }}</option>
                         <option value="in" @selected(request('status') === 'in')>{{ __('inventory.status_in') }}</option>
                         <option value="low" @selected(request('status') === 'low')>{{ __('inventory.status_low') }}</option>
                         <option value="out" @selected(request('status') === 'out')>{{ __('inventory.status_out') }}</option>
                     </select>
-                </div>
-                <div class="col-6 col-lg-auto">
-                    <select name="store_id" class="form-select form-select-sm" onchange="this.form.submit()">
-                        @foreach ($stores as $s)
-                        <option value="{{ $s->id }}" @selected((string) $storeId === (string) $s->id)>{{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-lg-auto">
-                    <select name="per_page" class="form-select form-select-sm">
+                    <select name="per_page" class="form-select form-select-sm dt-pro-filter-select" style="width:auto">
                         @foreach ([10, 25, 50] as $n)
                         <option value="{{ $n }}" @selected((int) request('per_page', 10) === $n)>{{ $n }} / {{ __('inventory.page') }}</option>
                         @endforeach
                     </select>
-                </div>
-                <div class="col-12 col-lg-auto">
                     <button type="submit" class="btn btn-dt-pro-outline btn-sm px-3">
                         <i class="fas fa-sliders-h me-1"></i>{{ __('inventory.filter_apply') }}
                     </button>
@@ -168,6 +160,48 @@
         </x-slot:footer>
         @endif
     </x-admin.data-table-pro>
+
+    @if ($storeId && $recentMovements->isNotEmpty())
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mt-4">
+        <div class="card-header bg-white border-bottom px-4 py-3">
+            <h6 class="fw-bold mb-0"><i class="fas fa-exchange-alt me-2 text-muted"></i>{{ __('inventory.recent_movements') }}</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4" style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.movement_date') }}</th>
+                        <th style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.product') }}</th>
+                        <th style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.movement_type') }}</th>
+                        <th class="text-end" style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.qty') }}</th>
+                        <th style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.unit') }}</th>
+                        <th style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.movement_user') }}</th>
+                        <th class="pe-4" style="background:#f4f5f7;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#5c636a">{{ __('inventory.movement_notes') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($recentMovements as $mv)
+                    <tr>
+                        <td class="ps-4 small text-muted">{{ $mv->created_at->format('d M Y H:i') }}</td>
+                        <td class="fw-medium">{{ $mv->product->product_name ?? '—' }}</td>
+                        <td>
+                            @if ($mv->type === 'in')
+                                <span class="dt-pro-movement-in"><i class="fas fa-arrow-down me-1"></i>{{ __('inventory.movement_in') }}</span>
+                            @else
+                                <span class="dt-pro-movement-out"><i class="fas fa-arrow-up me-1"></i>{{ __('inventory.movement_out') }}</span>
+                            @endif
+                        </td>
+                        <td class="text-end font-monospace fw-medium">{{ number_format((float) $mv->quantity, 2) }}</td>
+                        <td>{{ $mv->unit->code ?? '—' }}</td>
+                        <td class="small">{{ $mv->user->name ?? '—' }}</td>
+                        <td class="pe-4 small text-muted">{{ $mv->notes ?? '—' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 
     <p class="small text-muted mt-3 mb-0"><i class="fas fa-info-circle me-1"></i>{{ __('inventory.middleware_hint') }}</p>
 </div>

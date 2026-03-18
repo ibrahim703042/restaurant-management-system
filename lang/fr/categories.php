@@ -1,0 +1,20 @@
+<?php
+return [
+    'title' => 'Catégories',
+    'add' => 'Ajouter une catégorie',
+    'edit' => 'Modifier la catégorie',
+    'col_name' => 'Nom',
+    'col_image' => 'Image',
+    'col_status' => 'Statut',
+    'label_name' => 'Nom',
+    'label_image' => 'Image',
+    'label_status' => 'Statut',
+    'filter_status' => 'Statut',
+    'filter_all' => 'Tous',
+    'filter_active' => 'Actif',
+    'filter_inactive' => 'Inactif',
+    'filter_refresh' => 'Réinitialiser les filtres',
+    'confirm_delete' => 'Supprimer la catégorie ?',
+    'cannot_delete' => 'Impossible de supprimer — des produits utilisent cette catégorie.',
+    'search' => 'Rechercher des catégories…',
+];

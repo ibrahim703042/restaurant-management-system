@@ -126,4 +126,11 @@ class WorkShiftController extends Controller
 
         return response()->json(['message' => 'Shift removed.']);
     }
+
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = WorkShift::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
 }

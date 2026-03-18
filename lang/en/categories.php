@@ -1,0 +1,20 @@
+<?php
+return [
+    'title' => 'Categories',
+    'add' => 'Add category',
+    'edit' => 'Edit category',
+    'col_name' => 'Name',
+    'col_image' => 'Image',
+    'col_status' => 'Status',
+    'label_name' => 'Name',
+    'label_image' => 'Image',
+    'label_status' => 'Status',
+    'filter_status' => 'Status',
+    'filter_all' => 'All',
+    'filter_active' => 'Active',
+    'filter_inactive' => 'Inactive',
+    'filter_refresh' => 'Refresh filters',
+    'confirm_delete' => 'Delete category?',
+    'cannot_delete' => 'Cannot delete — products use this category.',
+    'search' => 'Search categories…',
+];

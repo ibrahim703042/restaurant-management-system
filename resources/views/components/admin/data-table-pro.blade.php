@@ -8,7 +8,7 @@
             {{ $toolbar }}
         </div>
     @endisset
-    <div class="table-responsive">
+    <div class="dt-pro-table-wrap">
         {{ $slot }}
     </div>
     @isset($footer)

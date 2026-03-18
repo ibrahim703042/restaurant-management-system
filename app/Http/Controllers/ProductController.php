@@ -152,6 +152,13 @@ class ProductController extends Controller
         return $this->jsonOk($request, ['message' => 'Product removed.'], redirect()->route('products.index')->with('status', 'Product removed.'));
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = Product::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     private function syncInventoryRowsForProduct(int $productId): void
     {
         $unitId = Unit::query()->where('code', 'pcs')->value('id') ?? 1;

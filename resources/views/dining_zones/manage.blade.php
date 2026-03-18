@@ -1,45 +1,76 @@
 @extends('layouts.admin')
-@section('title', 'Dining zones')
-@section('page-title', 'Dining zones')
+@section('title', __('zones.title'))
+@section('page-title', __('zones.title'))
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Home</a></li>
-<li class="breadcrumb-item active">Zones</li>
+<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">{{ __('common.home') }}</a></li>
+<li class="breadcrumb-item active">{{ __('zones.title') }}</li>
 @endsection
 @section('main-section')
-<x-admin.table-card title="Floor zones" icon="fas fa-map-marker-alt">
-    <x-slot:actions>
-        <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add zone</button>
-    </x-slot:actions>
-    <x-slot:filters>
-        <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small mb-0">Store</label>
-                <select class="form-select form-select-sm admin-ts-select" id="filterStore" data-placeholder="All stores">
-                    <option value="">All stores</option>
-                    @foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
-                </select>
+<div class="container-fluid px-lg-4 pb-4">
+    <x-admin.page-actions :title="__('zones.title')">
+        <x-slot:actions>
+            <button type="button" class="btn btn-dt-pro-primary btn-sm" id="btnAdd">
+                <i class="fas fa-plus me-1"></i>{{ __('zones.add') }}
+            </button>
+        </x-slot:actions>
+    </x-admin.page-actions>
+
+    <x-admin.data-table-pro>
+        <x-slot:toolbar>
+            <div class="dt-pro-toolbar-split">
+                <div class="dt-pro-search-wrap">
+                    <i class="fas fa-search dt-pro-search-icon"></i>
+                    <input type="search" class="form-control form-control-sm" id="dtSearchInput" placeholder="{{ __('zones.search') }}">
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <select class="form-select form-select-sm dt-pro-filter-select admin-ts-select" id="filterStore" data-placeholder="{{ __('zones.filter_all_stores') }}">
+                        <option value="">{{ __('zones.filter_all_stores') }}</option>
+                        @foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
+                    </select>
+                    <button type="button" class="btn btn-dt-pro-outline btn-sm px-3" id="btnApply">
+                        <i class="fas fa-sliders-h me-1"></i>{{ __('common.apply_filter') }}
+                    </button>
+                    <button class="btn btn-danger btn-sm d-none" id="btnBulkDel">
+                        <i class="fas fa-trash me-1"></i>{{ __('common.delete_selected') }} <span class="dt-pro-bulk-count badge bg-white text-danger ms-1"></span>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Apply filter</button></div>
-        </div>
-    </x-slot:filters>
-    <thead class="table-light"><tr><th>#</th><th>Store</th><th>Zone</th><th>Sort</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
-</x-admin.table-card>
+        </x-slot:toolbar>
+        <table id="dt-table" class="table align-middle w-100 mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width:42px"><input type="checkbox" class="form-check-input" id="dtCheckAll"></th>
+                    <th>{{ __('common.id') }}</th>
+                    <th>{{ __('zones.col_store') }}</th>
+                    <th>{{ __('zones.col_zone') }}</th>
+                    <th>{{ __('zones.col_sort') }}</th>
+                    <th>{{ __('zones.col_status') }}</th>
+                    <th class="text-end pe-4" style="width:160px">{{ __('common.actions') }}</th>
+                </tr>
+            </thead>
+        </table>
+    </x-admin.data-table-pro>
+</div>
+
 <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalTitle">Add zone</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-content dt-pro-modal">
+            <div class="modal-header"><h5 class="modal-title fw-bold" id="modalTitle">{{ __('zones.add') }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <form id="form">@csrf
                 <div class="modal-body">
                     <div id="formErrors" class="alert alert-danger d-none"></div>
-                    <x-admin.select-search name="store_id" id="selZoneStore" label="Store" required
-                        createUrl="{{ route('stores.index') }}" createLabel="New store">
+                    <x-admin.select-search name="store_id" id="selZoneStore" :label="__('zones.label_store')" required
+                        createUrl="{{ route('stores.index') }}" :createLabel="__('common.new_store')">
                         @foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                     </x-admin.select-search>
-                    <x-admin.input name="name" label="Name" required />
-                    <x-admin.input name="sort_order" type="number" label="Sort order" value="0" min="0" />
-                    <x-admin.radio-group name="status" label="Status" :options="['1' => 'Active', '0' => 'Inactive']" selected="1" />
+                    <x-admin.input name="name" :label="__('zones.label_name')" required />
+                    <x-admin.input name="sort_order" type="number" :label="__('zones.label_sort')" value="0" min="0" />
+                    <x-admin.radio-group name="status" :label="__('zones.label_status')" :options="['1' => __('common.active'), '0' => __('common.inactive')]" selected="1" />
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">{{ __('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-dt-pro-primary rounded-pill px-4">{{ __('common.save') }}</button>
+                </div>
             </form>
         </div>
     </div>
@@ -67,23 +98,36 @@
             d.store_id = f.tomselect ? f.tomselect.getValue() : f.value;
         } },
         columns: [
+            { data: null, orderable: false, searchable: false, className: 'ps-4',
+              render: function(data, type, row) { return '<input type="checkbox" class="form-check-input dt-pro-row-check" value="' + row.id + '">'; } },
             { data: 'id' }, { data: 'store' }, { data: 'name' }, { data: 'sort_order' },
             { data: 'status_html', orderable: false, searchable: false },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[3, 'asc']]
+        order: [[4, 'asc']],
+        dom: 'rtip'
     });
+
+    var searchInput = document.getElementById('dtSearchInput');
+    var searchTimer = null;
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () { dt.search(searchInput.value).draw(); }, 350);
+    });
+
+    dtProBulk({ dt: dt, bulkUrl: @json(route('dining-zones.bulkDestroy')), csrfToken: csrf, confirmMsg: @json(__('common.confirm_bulk_delete')), deleteLabel: @json(__('common.delete')) });
+
     document.getElementById('btnApply').addEventListener('click', function () { dt.ajax.reload(); });
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { doDel($(this).data('id')); });
     document.getElementById('btnAdd').addEventListener('click', () => {
-        editingId = null; document.getElementById('modalTitle').textContent = 'Add zone'; form.reset();
+        editingId = null; document.getElementById('modalTitle').textContent = @json(__('zones.add')); form.reset();
         form.querySelector('[name="status"][value="1"]').checked = true;
         ensureTs(selZoneStore); if (selZoneStore.tomselect && selZoneStore.options[0]) selZoneStore.tomselect.setValue(selZoneStore.options[0].value, true);
         document.getElementById('formErrors').classList.add('d-none'); modal.show();
     });
     function openEdit(id) {
-        editingId = id; document.getElementById('modalTitle').textContent = 'Edit zone';
+        editingId = id; document.getElementById('modalTitle').textContent = @json(__('zones.edit'));
         document.getElementById('formErrors').classList.add('d-none');
         fetch(base + '/' + id + '/json').then(r => r.json()).then(({ zone: z }) => {
             form.name.value = z.name; form.sort_order.value = z.sort_order;
@@ -98,17 +142,17 @@
         const fd = new FormData(form);
         fetch(editingId ? base + '/' + editingId + '/update' : storeUrl, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf } })
             .then(async r => { const j = await r.json().catch(() => ({}));
-                if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : j.message; err.classList.remove('d-none'); return; }
-                modal.hide(); Swal.fire({ icon: 'success', title: j.message||'Saved', timer: 1500, showConfirmButton: false }); dt.ajax.reload(null, false);
+                if (!r.ok) { err.innerHTML = j.errors ? Object.values(j.errors).flat().join('<br>') : (j.message || @json(__('common.error'))); err.classList.remove('d-none'); return; }
+                modal.hide(); Swal.fire({ icon: 'success', title: j.message || @json(__('common.saved')), timer: 1500, showConfirmButton: false }); dt.ajax.reload(null, false);
             });
     });
     function doDel(id) {
-        Swal.fire({ title: 'Delete zone?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Delete' })
+        Swal.fire({ title: @json(__('zones.confirm_delete')), icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: @json(__('common.delete')) })
             .then(res => { if (!res.isConfirmed) return;
                 fetch(base + '/' + id, { method: 'DELETE', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(async r => { const j = await r.json().catch(() => ({}));
-                        if (!r.ok) { Swal.fire('Error', j.message||'Error', 'error'); return; }
-                        Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
+                        if (!r.ok) { Swal.fire(@json(__('common.error')), j.message || @json(__('common.cannot_delete')), 'error'); return; }
+                        Swal.fire({ icon: 'success', title: @json(__('common.removed')), timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
                     });
             });
     }

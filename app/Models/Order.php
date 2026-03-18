@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
-    protected $fillable = ['order_number', 'client_id', 'user_id', 'status', 'total', 'notes'];
+    protected $fillable = ['order_number', 'client_id', 'table_id', 'user_id', 'status', 'total', 'notes'];
 
     protected $casts = [
         'total' => 'decimal:2',
@@ -28,6 +28,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function diningTable(): BelongsTo
+    {
+        return $this->belongsTo(DiningTable::class, 'table_id');
     }
 
     public function bill(): HasOne

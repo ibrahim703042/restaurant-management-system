@@ -1,0 +1,21 @@
+<?php
+return [
+    'title' => 'Waiter Performance',
+    'subtitle' => 'Performance reviews',
+    'add' => 'Add review',
+    'edit' => 'Edit review',
+    'col_employee' => 'Employee',
+    'col_period' => 'Period',
+    'col_rating' => 'Rating',
+    'col_tables' => 'Tables',
+    'col_sales' => 'Sales',
+    'label_employee' => 'Employee',
+    'label_rating' => 'Rating (1–5)',
+    'label_period_start' => 'Period start',
+    'label_period_end' => 'Period end',
+    'label_tables' => 'Tables served',
+    'label_sales' => 'Sales total',
+    'label_comment' => 'Comment',
+    'confirm_delete' => 'Delete?',
+    'search' => 'Search performance…',
+];

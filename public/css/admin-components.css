@@ -1,5 +1,62 @@
 /* Admin shared components: tables, stat cards, form fields, Tom Select tweaks */
 
+/* ========== Dashboard hero stats ========== */
+.dash-hero-stat {
+    border-radius: 1rem;
+    border: none;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.dash-hero-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .08) !important;
+}
+
+.dash-hero-stat .stat-inner {
+    padding: 1.35rem 1.5rem;
+    position: relative;
+}
+
+.dash-hero-stat .stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    opacity: .95;
+}
+
+.dash-hero-stat .stat-value {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+}
+
+.dash-hero-stat .stat-label {
+    font-size: .8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    opacity: .85;
+}
+
+.dash-pay-row:hover {
+    background: rgba(60, 141, 188, .04);
+}
+
+.dash-pay-avatar {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+}
+
 .admin-table-card .table-admin thead th {
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -30,8 +87,8 @@
     font-size: 0.9rem;
 }
 
-.admin-checkbox-group__items.is-invalid ~ .invalid-feedback,
-.admin-radio-group .form-check-input.is-invalid ~ .invalid-feedback {
+.admin-checkbox-group__items.is-invalid~.invalid-feedback,
+.admin-radio-group .form-check-input.is-invalid~.invalid-feedback {
     display: block;
 }
 
@@ -51,8 +108,8 @@
     min-height: calc(1.5em + 0.75rem + 2px);
 }
 
-.admin-select-search-wrap .is-invalid + .ts-wrapper .ts-control,
-.admin-select-search-wrap select.is-invalid ~ .ts-wrapper .ts-control {
+.admin-select-search-wrap .is-invalid+.ts-wrapper .ts-control,
+.admin-select-search-wrap select.is-invalid~.ts-wrapper .ts-control {
     border-color: var(--bs-form-invalid-border-color);
 }
 
@@ -78,6 +135,7 @@
     font-weight: 600;
     padding: 0.5rem 1.1rem;
 }
+
 .btn-dt-pro-primary:hover {
     background: var(--dt-pro-accent-hover);
     border-color: var(--dt-pro-accent-hover);
@@ -91,6 +149,7 @@
     color: #212529;
     background: #fff;
 }
+
 .btn-dt-pro-outline:hover {
     background: #f8f9fa;
     color: #212529;
@@ -122,11 +181,13 @@
     position: relative;
     max-width: 280px;
 }
+
 .dt-pro-search-wrap .form-control {
     border-radius: 2rem;
     padding-left: 2.5rem;
     border: 1px solid #dee2e6;
 }
+
 .dt-pro-search-wrap .dt-pro-search-icon {
     position: absolute;
     left: 1rem;
@@ -159,30 +220,37 @@
     font-size: 0.8rem;
     font-weight: 600;
 }
+
 .dt-pro-badge-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
 }
+
 .dt-pro-badge--in {
     background: rgba(25, 135, 84, 0.12);
     color: #198754;
 }
+
 .dt-pro-badge--in .dt-pro-badge-dot {
     background: #198754;
 }
+
 .dt-pro-badge--low {
     background: rgba(255, 193, 7, 0.18);
     color: #b45309;
 }
+
 .dt-pro-badge--low .dt-pro-badge-dot {
     background: #f59e0b;
 }
+
 .dt-pro-badge--out {
     background: rgba(220, 53, 69, 0.12);
     color: #dc3545;
 }
+
 .dt-pro-badge--out .dt-pro-badge-dot {
     background: #dc3545;
 }
@@ -191,15 +259,19 @@
     font-size: 1.75rem;
     letter-spacing: -0.03em;
 }
+
 .dt-pro-segbar-in {
     background: linear-gradient(90deg, #198754, #20c997);
 }
+
 .dt-pro-segbar-low {
     background: linear-gradient(90deg, #f59e0b, #fbbf24);
 }
+
 .dt-pro-segbar-out {
     background: linear-gradient(90deg, #dc3545, #e35d6a);
 }
+
 .dt-pro-dot {
     display: inline-block;
     width: 8px;
@@ -208,12 +280,15 @@
     margin-right: 0.25rem;
     vertical-align: middle;
 }
+
 .dt-pro-dot--in {
     background: #198754;
 }
+
 .dt-pro-dot--low {
     background: #f59e0b;
 }
+
 .dt-pro-dot--out {
     background: #dc3545;
 }
@@ -227,6 +302,7 @@
     background: #fff;
     color: #495057;
 }
+
 .dt-pro-actions-btn:hover {
     background: #f8f9fa;
     border-color: #dee2e6;
@@ -238,12 +314,14 @@
     border: 1px solid #e9ecef;
     color: #495057;
 }
+
 .pagination.dt-pro-pagination .page-item.active .page-link {
     background: #fff;
     border-color: var(--dt-pro-accent);
     color: var(--dt-pro-accent);
     font-weight: 600;
 }
+
 .pagination.dt-pro-pagination .page-item.disabled .page-link {
     opacity: 0.45;
 }
@@ -253,6 +331,7 @@
     margin-bottom: 0;
     gap: 0.15rem;
 }
+
 .dt-pro-footer .page-link {
     border-radius: 0.45rem !important;
     margin: 0;
@@ -260,9 +339,202 @@
     color: #495057;
     padding: 0.35rem 0.65rem;
 }
+
 .dt-pro-footer .page-item.active .page-link {
     background: #fff !important;
     border-color: var(--dt-pro-accent) !important;
     color: var(--dt-pro-accent) !important;
+    font-weight: 600;
+}
+
+/* Toolbar split: search left, filters right */
+.dt-pro-toolbar-split {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.dt-pro-filter-select {
+    width: auto;
+    min-width: 120px;
+}
+
+@media (max-width: 767.98px) {
+    .dt-pro-toolbar-split {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dt-pro-toolbar-split .dt-pro-search-wrap {
+        max-width: 100%;
+    }
+}
+
+/* Odoo-style modal */
+.modal-content.dt-pro-modal {
+    border-radius: 1rem;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.15);
+}
+
+/* Profile / Odoo tabs */
+.dt-pro-tabs .nav-link {
+    border: none;
+    color: #495057;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+}
+
+.dt-pro-tabs .nav-link.active {
+    color: var(--dt-pro-accent);
+    border-bottom-color: var(--dt-pro-accent);
+    background: transparent;
+}
+
+.dt-pro-tabs .nav-link:hover:not(.active) {
+    border-bottom-color: #dee2e6;
+}
+
+.dt-pro-profile-avatar {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 1rem;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dt-pro-profile-left {
+    background: #fafbfc;
+    border-right: 1px solid #f0f1f3;
+}
+
+/* ========== dt-pro-table-wrap: scrollable table, fixed footer ========== */
+.dt-pro-table-wrap {
+    position: relative;
+}
+.dt-pro-table-wrap .dataTables_wrapper > table.dataTable {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    min-width: 100%;
+}
+.dt-pro-table-wrap .dataTables_wrapper > table.dataTable > thead,
+.dt-pro-table-wrap .dataTables_wrapper > table.dataTable > tbody {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+}
+
+/* ========== DataTables footer inside dt-pro-card ========== */
+.dt-pro-card .dataTables_wrapper {
+    overflow: hidden;
+}
+
+.dt-pro-card .dataTables_info {
+    font-size: 0.82rem;
+    color: #6c757d;
+    background: #fff;
+    padding: 0.85rem 1.25rem !important;
+    border-top: 1px solid #f0f1f3;
+}
+
+.dt-pro-card .dataTables_paginate {
+    background: #fff;
+    padding: 0.65rem 1.25rem 0.85rem !important;
+    display: flex !important;
+    justify-content: flex-end;
+}
+
+.dt-pro-card .dataTables_paginate .pagination {
+    margin: 0 !important;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+}
+
+.dt-pro-card .dataTables_paginate .pagination .page-link {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 0.45rem !important;
+    background: #fff !important;
+    color: #495057 !important;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    box-shadow: none !important;
+    line-height: 1;
+}
+
+.dt-pro-card .dataTables_paginate .pagination .page-item {
+    margin: 0 !important;
+}
+
+.dt-pro-card .dataTables_paginate .pagination .page-link:hover {
+    background: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+.dt-pro-card .dataTables_paginate .pagination .page-item.active .page-link,
+.dt-pro-card .dataTables_paginate .pagination .page-item.active .page-link:hover {
+    background: #fff !important;
+    border-color: var(--dt-pro-accent) !important;
+    color: var(--dt-pro-accent) !important;
+    font-weight: 600;
+}
+
+.dt-pro-card .dataTables_paginate .pagination .page-item.disabled .page-link,
+.dt-pro-card .dataTables_paginate .pagination .page-item.disabled .page-link:hover {
+    opacity: 0.4;
+    background: #fff !important;
+    border-color: #e9ecef !important;
+    color: #adb5bd !important;
+    cursor: default;
+    pointer-events: none;
+}
+
+.dt-pro-card .dataTables_processing {
+    background: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.85rem;
+    color: #6c757d;
+    z-index: 5;
+}
+
+/* sm+: info left, paginate right on same visual row */
+@media (min-width: 576px) {
+    .dt-pro-card .dataTables_info,
+    .dt-pro-card .dataTables_paginate {
+        border-top: 1px solid #f0f1f3;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dt-pro-card .dataTables_info {
+        text-align: center;
+    }
+    .dt-pro-card .dataTables_paginate {
+        justify-content: center;
+    }
+}
+
+/* Movements table */
+.dt-pro-movement-in {
+    color: #198754;
+    font-weight: 600;
+}
+
+.dt-pro-movement-out {
+    color: #dc3545;
     font-weight: 600;
 }

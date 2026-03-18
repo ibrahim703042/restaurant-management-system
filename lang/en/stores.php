@@ -1,0 +1,21 @@
+<?php
+return [
+    'title' => 'Stores',
+    'add' => 'Add store',
+    'edit' => 'Edit store',
+    'col_name' => 'Name',
+    'col_code' => 'Code',
+    'col_phone' => 'Phone',
+    'col_primary_stock' => 'Primary stock',
+    'col_status' => 'Status',
+    'label_name' => 'Name',
+    'label_code' => 'Code',
+    'label_phone' => 'Phone',
+    'label_status' => 'Status',
+    'label_address' => 'Address',
+    'label_notes' => 'Notes',
+    'label_primary_stock' => 'Primary stock location',
+    'confirm_delete' => 'Remove store?',
+    'cannot_delete' => 'Cannot delete — dependencies exist.',
+    'search' => 'Search stores…',
+];

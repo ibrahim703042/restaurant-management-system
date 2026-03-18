@@ -1,48 +1,63 @@
 @extends('layouts.admin')
-
-@section('title', 'Employees')
-@section('page-title', 'Employees')
+@section('title', __('employees.title'))
+@section('page-title', __('employees.title'))
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Home</a></li>
-<li class="breadcrumb-item active">Employees</li>
+<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">{{ __('common.home') }}</a></li>
+<li class="breadcrumb-item active">{{ __('employees.title') }}</li>
 @endsection
-
 @section('main-section')
-<x-admin.table-card title="Staff directory" icon="fas fa-users">
-    <x-slot:actions>
-        <button type="button" class="btn btn-primary" id="btnAddEmployee"><i class="fas fa-plus me-1"></i>Add employee</button>
-    </x-slot:actions>
-    <x-slot:filters>
-        <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small mb-0">Position</label>
-                <select class="form-select form-select-sm admin-ts-select" id="filterPosition" data-placeholder="All positions">
-                    <option value="">All positions</option>
-                    @foreach ($positions as $p)
-                    <option value="{{ $p->id }}">{{ $p->title }}</option>
-                    @endforeach
-                </select>
+<div class="container-fluid px-lg-4 pb-4">
+    <x-admin.page-actions :title="__('employees.title')">
+        <x-slot:actions>
+            <button type="button" class="btn btn-dt-pro-primary btn-sm" id="btnAddEmployee">
+                <i class="fas fa-plus me-1"></i>{{ __('employees.add') }}
+            </button>
+        </x-slot:actions>
+    </x-admin.page-actions>
+
+    <x-admin.data-table-pro>
+        <x-slot:toolbar>
+            <div class="dt-pro-toolbar-split">
+                <div class="dt-pro-search-wrap">
+                    <i class="fas fa-search dt-pro-search-icon"></i>
+                    <input type="search" class="form-control form-control-sm" id="dtSearchInput" placeholder="{{ __('employees.search') }}">
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <select class="form-select form-select-sm dt-pro-filter-select admin-ts-select" id="filterPosition" data-placeholder="{{ __('employees.filter_all') }}">
+                        <option value="">{{ __('employees.filter_all') }}</option>
+                        @foreach ($positions as $p)
+                        <option value="{{ $p->id }}">{{ $p->title }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="btn btn-dt-pro-outline btn-sm px-3" id="btnApplyFilter">
+                        <i class="fas fa-sliders-h me-1"></i>{{ __('common.apply_filter') }}
+                    </button>
+                    <button class="btn btn-danger btn-sm d-none" id="btnBulkDel">
+                        <i class="fas fa-trash me-1"></i>{{ __('common.delete_selected') }} <span class="dt-pro-bulk-count badge bg-white text-danger ms-1"></span>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApplyFilter">Apply filter</button></div>
-        </div>
-    </x-slot:filters>
-    <thead class="table-light">
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Position</th>
-            <th style="width:160px">Actions</th>
-        </tr>
-    </thead>
-</x-admin.table-card>
+        </x-slot:toolbar>
+        <table id="dt-table" class="table align-middle w-100 mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width:42px"><input type="checkbox" class="form-check-input" id="dtCheckAll"></th>
+                    <th>{{ __('employees.col_name') }}</th>
+                    <th>{{ __('employees.col_email') }}</th>
+                    <th>{{ __('employees.col_phone') }}</th>
+                    <th>{{ __('employees.col_position') }}</th>
+                    <th class="text-end pe-4" style="width:160px">{{ __('common.actions') }}</th>
+                </tr>
+            </thead>
+        </table>
+    </x-admin.data-table-pro>
+</div>
 
 <div class="modal fade" id="employeeModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
+        <div class="modal-content dt-pro-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="employeeModalTitle">Add employee</h5>
+                <h5 class="modal-title fw-bold" id="employeeModalTitle">{{ __('employees.add') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="employeeForm" enctype="multipart/form-data">
@@ -50,40 +65,39 @@
                 <div class="modal-body">
                     <div id="employeeFormErrors" class="alert alert-danger d-none"></div>
                     <div class="row g-2">
-                        <div class="col-md-6"><x-admin.input name="fname" label="First name" wrapperClass="mb-0" required /></div>
-                        <div class="col-md-6"><x-admin.input name="lname" label="Last name" wrapperClass="mb-0" required /></div>
-                        <div class="col-md-6"><x-admin.input name="email" type="email" label="Email" wrapperClass="mb-0" required /></div>
-                        <div class="col-md-6"><x-admin.input name="phone" label="Phone" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="fname" :label="__('employees.label_first_name')" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="lname" :label="__('employees.label_last_name')" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="email" type="email" :label="__('employees.label_email')" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="phone" :label="__('employees.label_phone')" wrapperClass="mb-0" required /></div>
                         <div class="col-md-6">
-                            <x-admin.radio-group name="gender" label="Gender" :options="['Male' => 'Male', 'Female' => 'Female', 'Other' => 'Other']" selected="Male" />
+                            <x-admin.radio-group name="gender" :label="__('employees.label_gender')" :options="[__('employees.gender_male') => __('employees.gender_male'), __('employees.gender_female') => __('employees.gender_female'), __('employees.gender_other') => __('employees.gender_other')]" :selected="__('employees.gender_male')" />
                         </div>
-                        <div class="col-md-6"><x-admin.input name="birthdate" type="date" label="Birthday" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="birthdate" type="date" :label="__('employees.label_birthday')" wrapperClass="mb-0" required /></div>
                         <div class="col-md-6">
-                            <x-admin.select-search name="position_id" id="selEmpPosition" label="Position" required wrapperClass="mb-0"
-                                createUrl="{{ route('positions.index') }}" createLabel="New position">
+                            <x-admin.select-search name="position_id" id="selEmpPosition" :label="__('employees.label_position')" required wrapperClass="mb-0"
+                                createUrl="{{ route('positions.index') }}" :createLabel="__('common.new_position')">
                                 @foreach ($positions as $p)
                                 <option value="{{ $p->id }}">{{ $p->title }}</option>
                                 @endforeach
                             </x-admin.select-search>
                         </div>
-                        <div class="col-md-6"><label class="form-label fw-semibold">Photo</label><input type="file" name="image" class="form-control" accept="image/*"></div>
-                        <div class="col-md-6"><x-admin.input name="mother" label="Mother name" wrapperClass="mb-0" required /></div>
-                        <div class="col-md-6"><x-admin.input name="father" label="Father name" wrapperClass="mb-0" required /></div>
-                        <div class="col-md-6"><x-admin.input name="country" label="Country" wrapperClass="mb-0" required /></div>
-                        <div class="col-md-6"><x-admin.input name="city" label="City" wrapperClass="mb-0" required /></div>
-                        <div class="col-12"><x-admin.input name="address" label="Address" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><label class="form-label fw-semibold">{{ __('employees.label_photo') }}</label><input type="file" name="image" class="form-control" accept="image/*"></div>
+                        <div class="col-md-6"><x-admin.input name="mother" :label="__('employees.label_mother')" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="father" :label="__('employees.label_father')" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="country" :label="__('employees.label_country')" wrapperClass="mb-0" required /></div>
+                        <div class="col-md-6"><x-admin.input name="city" :label="__('employees.label_city')" wrapperClass="mb-0" required /></div>
+                        <div class="col-12"><x-admin.input name="address" :label="__('employees.label_address')" wrapperClass="mb-0" required /></div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="employeeFormSubmit">Save</button>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">{{ __('common.cancel') }}</button>
+                    <button type="submit" class="btn btn-dt-pro-primary rounded-pill px-4" id="employeeFormSubmit">{{ __('common.save') }}</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 @endsection
-
 @push('scripts')
 <script>
 (function () {
@@ -106,18 +120,31 @@
             d.position_id = f.tomselect ? f.tomselect.getValue() : f.value;
         } },
         columns: [
-            { data: 'id' }, { data: 'name' }, { data: 'email' }, { data: 'phone' }, { data: 'position' },
+            { data: null, orderable: false, searchable: false, className: 'ps-4',
+              render: function(data, type, row) { return '<input type="checkbox" class="form-check-input dt-pro-row-check" value="' + row.id + '">'; } },
+            { data: 'name' }, { data: 'email' }, { data: 'phone' }, { data: 'position' },
             { data: 'actions', orderable: false, searchable: false, className: 'text-nowrap' }
         ],
-        order: [[0, 'desc']]
+        order: [[0, 'desc']],
+        dom: 'rtip'
     });
+
+    var searchInput = document.getElementById('dtSearchInput');
+    var searchTimer = null;
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () { dt.search(searchInput.value).draw(); }, 350);
+    });
+
+    dtProBulk({ dt: dt, bulkUrl: @json(route('employees.bulkDestroy')), csrfToken: csrf, confirmMsg: @json(__('common.confirm_bulk_delete')), deleteLabel: @json(__('common.delete')) });
+
     document.getElementById('btnApplyFilter').addEventListener('click', function () { dt.ajax.reload(); });
     $('#dt-table tbody').on('click', '.btn-edit', function () { openEdit($(this).data('id')); });
     $('#dt-table tbody').on('click', '.btn-del', function () { confirmDelete($(this).data('id')); });
 
     document.getElementById('btnAddEmployee').addEventListener('click', () => {
         editingId = null;
-        document.getElementById('employeeModalTitle').textContent = 'Add employee';
+        document.getElementById('employeeModalTitle').textContent = @json(__('employees.add'));
         form.reset();
         form.querySelector('[name="gender"][value="Male"]').checked = true;
         ensureTs(selPos);
@@ -128,7 +155,7 @@
 
     function openEdit(id) {
         editingId = id;
-        document.getElementById('employeeModalTitle').textContent = 'Edit employee';
+        document.getElementById('employeeModalTitle').textContent = @json(__('employees.edit'));
         document.getElementById('employeeFormErrors').classList.add('d-none');
         fetch(`{{ url('/employee') }}/${id}/json`, { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
@@ -166,7 +193,7 @@
             .then(async r => {
                 const j = await r.json().catch(() => ({}));
                 if (!r.ok) {
-                    let msg = j.message || 'Error';
+                    let msg = j.message || @json(__('common.error'));
                     if (j.errors) {
                         msg = Object.values(j.errors).flat().join('<br>');
                     }
@@ -175,26 +202,29 @@
                     return;
                 }
                 modal.hide();
-                Swal.fire({ icon: 'success', title: j.message || 'Saved', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: j.message || @json(__('common.saved')), timer: 1500, showConfirmButton: false });
                 dt.ajax.reload(null, false);
             });
     });
 
     function confirmDelete(id) {
         Swal.fire({
-            title: 'Remove employee?',
+            title: @json(__('employees.confirm_delete')),
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
-            confirmButtonText: 'Delete',
+            confirmButtonText: @json(__('common.delete')),
         }).then(res => {
             if (!res.isConfirmed) return;
             fetch(`{{ url('/employee') }}/${id}`, {
                 method: 'DELETE',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
             })
-                .then(r => r.json())
-                .then(() => { Swal.fire({ icon: 'success', title: 'Removed', timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false); });
+                .then(async r => {
+                    const j = await r.json().catch(() => ({}));
+                    if (!r.ok) { Swal.fire(@json(__('common.error')), j.message || @json(__('common.error')), 'error'); return; }
+                    Swal.fire({ icon: 'success', title: @json(__('common.removed')), timer: 1200, showConfirmButton: false }); dt.ajax.reload(null, false);
+                });
         });
     }
 })();

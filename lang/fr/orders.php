@@ -15,4 +15,8 @@ return [
     'cancel' => 'Annuler',
     'confirm_delete' => 'Supprimer cette commande ? Les lignes seront effacées. Irréversible.',
     'delete_btn' => 'Supprimer',
+    'search' => 'Rechercher des commandes…',
+    'col_client' => 'Client',
+    'col_total' => 'Total',
+    'col_date' => 'Date',
 ];

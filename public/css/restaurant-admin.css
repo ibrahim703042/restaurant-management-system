@@ -25,16 +25,29 @@ body.hold-transition {
   transition: margin-left 0.3s ease-in-out;
 }
 
+/* ---- Mobile: sidebar off-canvas with overlay ---- */
 @media (max-width: 991.98px) {
   .main-header.navbar {
     margin-left: 0;
   }
-  .sidebar-collapse .main-sidebar {
+
+  .main-sidebar {
     margin-left: -250px;
   }
-  .sidebar-collapse .main-header.navbar,
-  .sidebar-collapse .content-wrapper {
-    margin-left: 0 !important;
+  .sidebar-open .main-sidebar {
+    margin-left: 0;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1037;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-open .sidebar-overlay {
+    display: block;
   }
 }
 
@@ -50,14 +63,22 @@ body.hold-transition {
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
 }
 
-.sidebar-collapse .main-sidebar {
-  margin-left: -250px;
+/* Desktop: collapse sidebar via toggle */
+@media (min-width: 992px) {
+  .sidebar-collapse .main-sidebar {
+    margin-left: -250px;
+  }
+  .sidebar-collapse .main-header.navbar,
+  .sidebar-collapse .content-wrapper {
+    margin-left: 0 !important;
+  }
 }
 
 .brand-link {
   display: flex;
   align-items: center;
-  padding: 0.8125rem 0.5rem;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
   font-size: 1.1rem;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.9) !important;
@@ -70,9 +91,23 @@ body.hold-transition {
   color: #fff !important;
 }
 
+.sidebar-brand-mark {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ceaab4;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
 .brand-text {
   font-weight: 600;
   letter-spacing: 0.02em;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar {
@@ -123,15 +158,7 @@ body.hold-transition {
   }
 }
 
-/* Desktop: when sidebar is collapsed, expand header + main content full width */
-@media (min-width: 992px) {
-  .sidebar-collapse .main-header.navbar {
-    margin-left: 0 !important;
-  }
-  .sidebar-collapse .content-wrapper {
-    margin-left: 0 !important;
-  }
-}
+/* (desktop sidebar-collapse rules defined above) */
 
 .content-header {
   padding: 1rem 0;
@@ -209,4 +236,55 @@ table.dataTable thead th {
 }
 div.dataTables_wrapper div.dataTables_length select {
   min-width: 4.5rem;
+}
+
+/* ========== Global responsive tweaks ========== */
+
+/* Make all tables horizontally scrollable on small screens */
+.dt-pro-card .table-responsive,
+.dt-pro-card > table,
+.card > .table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dt-pro-card > table {
+  min-width: 700px;
+}
+
+/* Tighter padding on small screens */
+@media (max-width: 575.98px) {
+  .content-header {
+    padding: 0.65rem 0;
+  }
+  .content-header h1 {
+    font-size: 1.25rem;
+  }
+  .container-fluid.px-lg-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .dt-pro-card thead th,
+  .dt-pro-card tbody td {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.82rem;
+  }
+  .main-header.navbar {
+    padding: 0.35rem 0.75rem;
+  }
+}
+
+/* Medium screens: slightly tighter */
+@media (max-width: 767.98px) {
+  .content-header h1 {
+    font-size: 1.35rem;
+  }
+  .breadcrumb {
+    font-size: 0.82rem;
+  }
+  /* Stack page-actions on mobile */
+  .dt-pro-page-actions {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
 }

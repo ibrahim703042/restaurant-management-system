@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/clients/{client}/json', [ClientController::class, 'showJson'])->name('clients.showJson');
         Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
         Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+        Route::post('/clients/bulk-delete', [ClientController::class, 'destroyBulk'])->name('clients.bulkDestroy');
     });
 
     Route::middleware('permission:sales.orders.manage')->group(function () {
@@ -89,6 +90,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/{order}/json', [OrderController::class, 'showJson'])->name('orders.showJson');
         Route::post('/orders/{order}/update', [OrderController::class, 'update'])->name('orders.update');
         Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+        Route::post('/orders/bulk-delete', [OrderController::class, 'destroyBulk'])->name('orders.bulkDestroy');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     });
 
@@ -129,6 +131,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/user/{user}/employees-json', [UserController::class, 'employeesForEditJson'])->name('users.employees.edit');
         Route::put('/user/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/user/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/user/bulk-delete', [UserController::class, 'destroyBulk'])->name('users.bulkDestroy');
     });
 
     Route::middleware('permission:hr.positions.manage')->group(function () {
@@ -138,6 +141,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/position/{position}/json', [PositionController::class, 'showJson'])->name('positions.showJson');
         Route::post('/position/{position}/update', [PositionController::class, 'update'])->name('positions.update');
         Route::delete('/position/{position}', [PositionController::class, 'destroy'])->name('positions.destroy');
+        Route::post('/position/bulk-delete', [PositionController::class, 'destroyBulk'])->name('positions.bulkDestroy');
     });
 
     Route::middleware('permission:hr.employees.manage')->group(function () {
@@ -147,6 +151,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/employee/{employee}/json', [EmployeeController::class, 'showJson'])->name('employees.showJson');
         Route::post('/employee/{employee}/update', [EmployeeController::class, 'update'])->name('employees.update');
         Route::delete('/employee/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+        Route::post('/employee/bulk-delete', [EmployeeController::class, 'destroyBulk'])->name('employees.bulkDestroy');
     });
 
     Route::middleware('permission:ops.stores.manage')->group(function () {
@@ -156,6 +161,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/store/{store}/json', [StoreController::class, 'showJson'])->name('stores.showJson');
         Route::post('/store/{store}/update', [StoreController::class, 'update'])->name('stores.update');
         Route::delete('/store/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
+        Route::post('/store/bulk-delete', [StoreController::class, 'destroyBulk'])->name('stores.bulkDestroy');
     });
 
     Route::middleware('permission:ops.dining_zones.manage')->group(function () {
@@ -165,6 +171,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dining-zone/{dining_zone}/json', [DiningZoneController::class, 'showJson'])->name('dining-zones.showJson');
         Route::post('/dining-zone/{dining_zone}/update', [DiningZoneController::class, 'update'])->name('dining-zones.update');
         Route::delete('/dining-zone/{dining_zone}', [DiningZoneController::class, 'destroy'])->name('dining-zones.destroy');
+        Route::post('/dining-zone/bulk-delete', [DiningZoneController::class, 'destroyBulk'])->name('dining-zones.bulkDestroy');
     });
 
     Route::middleware('permission:ops.dining_tables.manage')->group(function () {
@@ -174,6 +181,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/table/{dining_table}/json', [TableController::class, 'showJson'])->name('tables.showJson');
         Route::post('/table/{dining_table}/update', [TableController::class, 'update'])->name('tables.update');
         Route::delete('/table/{dining_table}', [TableController::class, 'destroy'])->name('tables.destroy');
+        Route::post('/table/bulk-delete', [TableController::class, 'destroyBulk'])->name('tables.bulkDestroy');
     });
 
     Route::middleware('permission:ops.menu.categories.manage')->group(function () {
@@ -183,6 +191,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/category/{category}/json', [CategoryController::class, 'showJson'])->name('categories.showJson');
         Route::post('/category/{category}/update', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/category/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::post('/category/bulk-delete', [CategoryController::class, 'destroyBulk'])->name('categories.bulkDestroy');
     });
 
     Route::middleware('permission:ops.menu.products.manage')->group(function () {
@@ -192,6 +201,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/product/{product}/json', [ProductController::class, 'showJson'])->name('products.showJson');
         Route::post('/product/{product}/update', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        Route::post('/product/bulk-delete', [ProductController::class, 'destroyBulk'])->name('products.bulkDestroy');
     });
 
     Route::middleware('permission:inventory.stock.view')->group(function () {
@@ -240,6 +250,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/work-shifts/{work_shift}/json', [WorkShiftController::class, 'showJson'])->name('work-shifts.showJson');
         Route::post('/work-shifts/{work_shift}/update', [WorkShiftController::class, 'update'])->name('work-shifts.update');
         Route::delete('/work-shifts/{work_shift}', [WorkShiftController::class, 'destroy'])->name('work-shifts.destroy');
+        Route::post('/work-shifts/bulk-delete', [WorkShiftController::class, 'destroyBulk'])->name('work-shifts.bulkDestroy');
     });
 
     Route::middleware('permission:hr.leaves.manage')->group(function () {
@@ -250,6 +261,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/employee-leaves/{employee_leave}/update', [EmployeeLeaveController::class, 'update'])->name('employee-leaves.update');
         Route::post('/employee-leaves/{employee_leave}/decide', [EmployeeLeaveController::class, 'decide'])->name('employee-leaves.decide');
         Route::delete('/employee-leaves/{employee_leave}', [EmployeeLeaveController::class, 'destroy'])->name('employee-leaves.destroy');
+        Route::post('/employee-leaves/bulk-delete', [EmployeeLeaveController::class, 'destroyBulk'])->name('employee-leaves.bulkDestroy');
     });
 
     Route::middleware('permission:hr.performance.manage')->group(function () {
@@ -259,6 +271,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/waiter-performance/{waiter_performance}/json', [WaiterPerformanceController::class, 'showJson'])->name('waiter-performance.showJson');
         Route::post('/waiter-performance/{waiter_performance}/update', [WaiterPerformanceController::class, 'update'])->name('waiter-performance.update');
         Route::delete('/waiter-performance/{waiter_performance}', [WaiterPerformanceController::class, 'destroy'])->name('waiter-performance.destroy');
+        Route::post('/waiter-performance/bulk-delete', [WaiterPerformanceController::class, 'destroyBulk'])->name('waiter-performance.bulkDestroy');
     });
 
     Route::middleware('permission:hr.activity.view')->group(function () {

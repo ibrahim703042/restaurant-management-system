@@ -129,4 +129,11 @@ class WaiterPerformanceController extends Controller
 
         return response()->json(['message' => 'Record removed.']);
     }
+
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = WaiterPerformance::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
 }

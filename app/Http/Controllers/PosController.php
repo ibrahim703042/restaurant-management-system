@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bill;
 use App\Models\Category;
 use App\Models\Client;
+use App\Models\DiningTable;
 use App\Models\InventoryStock;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -46,7 +47,14 @@ class PosController extends Controller
 
         $clients = Client::orderBy('name')->get();
 
-        return view('pos.index', compact('categories', 'clients', 'stores', 'posStoreId'));
+        $tables = DiningTable::query()
+            ->with('zone:id,name')
+            ->where('status', 1)
+            ->when($posStoreId, fn ($q) => $q->where('store_id', $posStoreId))
+            ->orderBy('table_name')
+            ->get();
+
+        return view('pos.index', compact('categories', 'clients', 'stores', 'posStoreId', 'tables'));
     }
 
     public function setStore(Request $request)
@@ -70,6 +78,7 @@ class PosController extends Controller
 
         $validated = $request->validate([
             'store_id' => 'required|exists:stores,id',
+            'table_id' => 'nullable|exists:tables,id',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1|max:999',
@@ -121,6 +130,7 @@ class PosController extends Controller
             $order = Order::create([
                 'order_number' => 'ORD-'.strtoupper(Str::random(10)),
                 'client_id' => $validated['client_id'] ?? null,
+                'table_id' => $validated['table_id'] ?? null,
                 'user_id' => auth()->id(),
                 'status' => 'completed',
                 'total' => $total,

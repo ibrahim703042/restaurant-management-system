@@ -182,6 +182,13 @@ class UserController extends Controller
         return $this->jsonOk($request, ['message' => 'User removed.'], redirect()->route('users.index')->with('status', 'User removed.'));
     }
 
+    public function destroyBulk(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer']);
+        $deleted = User::whereIn('id', $data['ids'])->delete();
+        return response()->json(['message' => __('common.bulk_deleted', ['count' => $deleted])]);
+    }
+
     public function employeesAvailableJson(): JsonResponse
     {
         $q = Employee::query()->whereNull('user_id')->orderBy('first_name')
