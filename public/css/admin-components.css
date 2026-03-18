@@ -59,3 +59,210 @@
 .admin-select-search-wrap.multi .ts-control {
     min-height: auto;
 }
+
+/* ========== Data table pro (inventory / shared list UI) ========== */
+:root {
+    --dt-pro-accent: #6f42c1;
+    --dt-pro-accent-hover: #5a32a3;
+}
+
+.dt-pro-page-title {
+    letter-spacing: -0.02em;
+}
+
+.btn-dt-pro-primary {
+    background: var(--dt-pro-accent);
+    border-color: var(--dt-pro-accent);
+    color: #fff;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    padding: 0.5rem 1.1rem;
+}
+.btn-dt-pro-primary:hover {
+    background: var(--dt-pro-accent-hover);
+    border-color: var(--dt-pro-accent-hover);
+    color: #fff;
+}
+
+.btn-dt-pro-outline {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    border: 1px solid #212529;
+    color: #212529;
+    background: #fff;
+}
+.btn-dt-pro-outline:hover {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+.dt-pro-card .table {
+    margin-bottom: 0;
+}
+
+.dt-pro-card thead th {
+    background: #f4f5f7 !important;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5c636a;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.9rem 1rem;
+    white-space: nowrap;
+}
+
+.dt-pro-card tbody td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f1f3;
+}
+
+.dt-pro-search-wrap {
+    position: relative;
+    max-width: 280px;
+}
+.dt-pro-search-wrap .form-control {
+    border-radius: 2rem;
+    padding-left: 2.5rem;
+    border: 1px solid #dee2e6;
+}
+.dt-pro-search-wrap .dt-pro-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+}
+
+.dt-pro-toolbar .form-select,
+.dt-pro-toolbar .form-control {
+    border-radius: 2rem;
+    border: 1px solid #dee2e6;
+}
+
+.dt-pro-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    background: #f4f5f7;
+}
+
+.dt-pro-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.dt-pro-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.dt-pro-badge--in {
+    background: rgba(25, 135, 84, 0.12);
+    color: #198754;
+}
+.dt-pro-badge--in .dt-pro-badge-dot {
+    background: #198754;
+}
+.dt-pro-badge--low {
+    background: rgba(255, 193, 7, 0.18);
+    color: #b45309;
+}
+.dt-pro-badge--low .dt-pro-badge-dot {
+    background: #f59e0b;
+}
+.dt-pro-badge--out {
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+}
+.dt-pro-badge--out .dt-pro-badge-dot {
+    background: #dc3545;
+}
+
+.dt-pro-summary-value {
+    font-size: 1.75rem;
+    letter-spacing: -0.03em;
+}
+.dt-pro-segbar-in {
+    background: linear-gradient(90deg, #198754, #20c997);
+}
+.dt-pro-segbar-low {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.dt-pro-segbar-out {
+    background: linear-gradient(90deg, #dc3545, #e35d6a);
+}
+.dt-pro-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.25rem;
+    vertical-align: middle;
+}
+.dt-pro-dot--in {
+    background: #198754;
+}
+.dt-pro-dot--low {
+    background: #f59e0b;
+}
+.dt-pro-dot--out {
+    background: #dc3545;
+}
+
+.dt-pro-actions-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    color: #495057;
+}
+.dt-pro-actions-btn:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.pagination.dt-pro-pagination .page-link {
+    border-radius: 0.45rem;
+    margin: 0 0.15rem;
+    border: 1px solid #e9ecef;
+    color: #495057;
+}
+.pagination.dt-pro-pagination .page-item.active .page-link {
+    background: #fff;
+    border-color: var(--dt-pro-accent);
+    color: var(--dt-pro-accent);
+    font-weight: 600;
+}
+.pagination.dt-pro-pagination .page-item.disabled .page-link {
+    opacity: 0.45;
+}
+
+.dt-pro-footer .pagination {
+    flex-wrap: wrap;
+    margin-bottom: 0;
+    gap: 0.15rem;
+}
+.dt-pro-footer .page-link {
+    border-radius: 0.45rem !important;
+    margin: 0;
+    border: 1px solid #e9ecef;
+    color: #495057;
+    padding: 0.35rem 0.65rem;
+}
+.dt-pro-footer .page-item.active .page-link {
+    background: #fff !important;
+    border-color: var(--dt-pro-accent) !important;
+    color: var(--dt-pro-accent) !important;
+    font-weight: 600;
+}

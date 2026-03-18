@@ -9,18 +9,24 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DebtController;
 use App\Http\Controllers\DiningZoneController;
+use App\Http\Controllers\EmployeeActivityController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeLeaveController;
 use App\Http\Controllers\InventoryStockController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayrollPeriodController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\TableController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WaiterPerformanceController;
+use App\Http\Controllers\WorkShiftController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -53,7 +59,11 @@ Route::middleware('guest')->group(function () {
     Route::post('password/reset/otp', [PasswordOtpController::class, 'resetWithOtp'])->name('password.otp.update');
 });
 
+Route::get('/locale/{locale}', [LocaleController::class, 'set'])->name('locale.set')->whereIn('locale', ['en', 'fr']);
+
 Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+
     Route::get('/home', fn () => redirect()->route('admin.index'))->name('home');
 
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index')->middleware('permission:sales.dashboard.view');
@@ -75,6 +85,10 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:sales.orders.manage')->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/list', [OrderController::class, 'listJson'])->name('orders.list');
+        Route::get('/orders/{order}/json', [OrderController::class, 'showJson'])->name('orders.showJson');
+        Route::post('/orders/{order}/update', [OrderController::class, 'update'])->name('orders.update');
+        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     });
 
@@ -85,14 +99,21 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:sales.bills.manage')->group(function () {
         Route::get('/bills', [BillController::class, 'index'])->name('bills.index');
+        Route::get('/bills/list', [BillController::class, 'listJson'])->name('bills.list');
         Route::get('/bills/{bill}', [BillController::class, 'show'])->name('bills.show');
         Route::get('/bills/{bill}/print', [BillController::class, 'printView'])->name('bills.print');
     });
 
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index')->middleware('permission:sales.payments.manage');
+    Route::middleware('permission:sales.payments.manage')->group(function () {
+        Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/list', [PaymentController::class, 'listJson'])->name('payments.list');
+    });
 
-    Route::get('/debts', [DebtController::class, 'index'])->name('debts.index')->middleware('permission:sales.debts.manage');
-    Route::post('/debts/{debt}/pay', [DebtController::class, 'recordPayment'])->name('debts.pay')->middleware('permission:sales.debts.manage');
+    Route::middleware('permission:sales.debts.manage')->group(function () {
+        Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
+        Route::get('/debts/list', [DebtController::class, 'listJson'])->name('debts.list');
+        Route::post('/debts/{debt}/pay', [DebtController::class, 'recordPayment'])->name('debts.pay');
+    });
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index')->middleware('permission:admin.settings.manage');
     Route::put('/settings/{setting}', [SettingsController::class, 'update'])->name('settings.update')->middleware('permission:admin.settings.manage');
@@ -178,9 +199,70 @@ Route::middleware('auth')->group(function () {
     });
     Route::post('/inventory/adjust', [InventoryStockController::class, 'adjust'])->name('inventory.adjust')->middleware('permission:inventory.stock.adjust');
 
+    /** Legacy blades under resources/views/pages/forms — auth + Spatie permission (same as real CRUD). */
+    Route::middleware(['auth', 'permission:ops.stores.manage'])->group(function () {
+        Route::view('/pages/forms/store', 'pages.forms.store')->name('pages.forms.store');
+        Route::view('/pages/forms/edit-store', 'pages.forms.edit_store')->name('pages.forms.edit-store');
+    });
+    Route::middleware(['auth', 'permission:ops.menu.categories.manage'])->group(function () {
+        Route::view('/pages/forms/category', 'pages.forms.category')->name('pages.forms.category');
+        Route::view('/pages/forms/edit-category', 'pages.forms.edit_category')->name('pages.forms.edit-category');
+    });
+    Route::middleware(['auth', 'permission:ops.menu.products.manage'])->group(function () {
+        Route::view('/pages/forms/product', 'pages.forms.product')->name('pages.forms.product');
+    });
+    Route::middleware(['auth', 'permission:hr.positions.manage'])->group(function () {
+        Route::view('/pages/forms/position', 'pages.forms.position')->name('pages.forms.position');
+        Route::view('/pages/forms/edit-position', 'pages.forms.edit_position')->name('pages.forms.edit-position');
+    });
+    Route::middleware(['auth', 'permission:hr.employees.manage'])->group(function () {
+        Route::view('/pages/forms/employee', 'pages.forms.employee')->name('pages.forms.employee');
+        Route::view('/pages/forms/edit-employee', 'pages.forms.edit_employee')->name('pages.forms.edit-employee');
+    });
+    Route::middleware(['auth', 'permission:admin.users.manage'])->group(function () {
+        Route::view('/pages/forms/user', 'pages.forms.user')->name('pages.forms.user');
+    });
+    Route::middleware(['auth', 'permission:ops.dining_tables.manage'])->group(function () {
+        Route::view('/pages/forms/table', 'pages.forms.table')->name('pages.forms.table');
+        Route::view('/pages/forms/edit-table', 'pages.forms.edit_table')->name('pages.forms.edit-table');
+    });
+
     Route::middleware('permission:hr.payroll.view')->group(function () {
         Route::get('/payroll/list', [PayrollPeriodController::class, 'listJson'])->name('payroll.list');
         Route::get('/payroll', [PayrollPeriodController::class, 'index'])->name('payroll.index');
     });
     Route::post('/payroll', [PayrollPeriodController::class, 'store'])->name('payroll.store')->middleware('permission:hr.payroll.manage');
+
+    Route::middleware('permission:hr.shifts.manage')->group(function () {
+        Route::get('/work-shifts', [WorkShiftController::class, 'index'])->name('work-shifts.index');
+        Route::get('/work-shifts/list', [WorkShiftController::class, 'listJson'])->name('work-shifts.list');
+        Route::post('/work-shifts', [WorkShiftController::class, 'store'])->name('work-shifts.store');
+        Route::get('/work-shifts/{work_shift}/json', [WorkShiftController::class, 'showJson'])->name('work-shifts.showJson');
+        Route::post('/work-shifts/{work_shift}/update', [WorkShiftController::class, 'update'])->name('work-shifts.update');
+        Route::delete('/work-shifts/{work_shift}', [WorkShiftController::class, 'destroy'])->name('work-shifts.destroy');
+    });
+
+    Route::middleware('permission:hr.leaves.manage')->group(function () {
+        Route::get('/employee-leaves', [EmployeeLeaveController::class, 'index'])->name('employee-leaves.index');
+        Route::get('/employee-leaves/list', [EmployeeLeaveController::class, 'listJson'])->name('employee-leaves.list');
+        Route::post('/employee-leaves', [EmployeeLeaveController::class, 'store'])->name('employee-leaves.store');
+        Route::get('/employee-leaves/{employee_leave}/json', [EmployeeLeaveController::class, 'showJson'])->name('employee-leaves.showJson');
+        Route::post('/employee-leaves/{employee_leave}/update', [EmployeeLeaveController::class, 'update'])->name('employee-leaves.update');
+        Route::post('/employee-leaves/{employee_leave}/decide', [EmployeeLeaveController::class, 'decide'])->name('employee-leaves.decide');
+        Route::delete('/employee-leaves/{employee_leave}', [EmployeeLeaveController::class, 'destroy'])->name('employee-leaves.destroy');
+    });
+
+    Route::middleware('permission:hr.performance.manage')->group(function () {
+        Route::get('/waiter-performance', [WaiterPerformanceController::class, 'index'])->name('waiter-performance.index');
+        Route::get('/waiter-performance/list', [WaiterPerformanceController::class, 'listJson'])->name('waiter-performance.list');
+        Route::post('/waiter-performance', [WaiterPerformanceController::class, 'store'])->name('waiter-performance.store');
+        Route::get('/waiter-performance/{waiter_performance}/json', [WaiterPerformanceController::class, 'showJson'])->name('waiter-performance.showJson');
+        Route::post('/waiter-performance/{waiter_performance}/update', [WaiterPerformanceController::class, 'update'])->name('waiter-performance.update');
+        Route::delete('/waiter-performance/{waiter_performance}', [WaiterPerformanceController::class, 'destroy'])->name('waiter-performance.destroy');
+    });
+
+    Route::middleware('permission:hr.activity.view')->group(function () {
+        Route::get('/employee-activities', [EmployeeActivityController::class, 'index'])->name('employee-activities.index');
+        Route::get('/employee-activities/list', [EmployeeActivityController::class, 'listJson'])->name('employee-activities.list');
+    });
 });

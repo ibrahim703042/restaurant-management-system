@@ -74,4 +74,17 @@ class User extends Authenticatable
 
         return $q->whereIn('id', $ids)->get();
     }
+
+    /** Avatar for header: linked employee photo, else Gravatar. */
+    public function avatarUrl(): string
+    {
+        $emp = $this->relationLoaded('employee') ? $this->employee : $this->employee()->first();
+        if ($emp && ! empty($emp->image) && $emp->image !== 'default.png') {
+            return asset('storage/'.$emp->image);
+        }
+        $hash = md5(strtolower(trim((string) $this->email)));
+
+        return 'https://www.gravatar.com/avatar/'.$hash.'?d=identicon&s=96';
+    }
 }
+

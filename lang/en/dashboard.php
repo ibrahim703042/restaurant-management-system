@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Dashboard',
+    'breadcrumb' => 'Overview',
+    'income_today' => 'Today income',
+    'income_week' => 'This week',
+    'income_month' => 'This month',
+    'client_debt' => 'Client debt total',
+    'total_orders' => 'Total orders',
+    'clients' => 'Clients',
+    'open_pos' => 'Open POS',
+    'recent_payments' => 'Recent payments',
+    'when' => 'When',
+    'amount' => 'Amount',
+    'method' => 'Method',
+    'client' => 'Client',
+    'by' => 'By',
+    'bill' => 'Bill',
+    'empty_payments' => 'No payments yet. Complete a sale in POS.',
+    'vs_last_week' => 'vs last week',
+    'txn_today' => 'payments today',
+    'view_all' => 'View all',
+    'live_hint' => 'Live from POS & checkout',
+];

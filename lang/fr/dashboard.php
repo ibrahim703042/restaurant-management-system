@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Tableau de bord',
+    'breadcrumb' => 'Aperçu',
+    'income_today' => "Revenu aujourd'hui",
+    'income_week' => 'Cette semaine',
+    'income_month' => 'Ce mois-ci',
+    'client_debt' => 'Dette clients totale',
+    'total_orders' => 'Commandes totales',
+    'clients' => 'Clients',
+    'open_pos' => 'Ouvrir la caisse',
+    'recent_payments' => 'Paiements récents',
+    'when' => 'Date',
+    'amount' => 'Montant',
+    'method' => 'Méthode',
+    'client' => 'Client',
+    'by' => 'Par',
+    'bill' => 'Facture',
+    'empty_payments' => 'Aucun paiement. Effectuez une vente au POS.',
+    'vs_last_week' => 'vs semaine dernière',
+    'txn_today' => 'paiements aujourd’hui',
+    'view_all' => 'Tout voir',
+    'live_hint' => 'Temps réel (POS & caisse)',
+];

@@ -24,6 +24,13 @@ class AdminController extends Controller
         $incomeWeek = Payment::query()->where('created_at', '>=', $weekStart)->sum('amount');
         $incomeMonth = Payment::query()->where('created_at', '>=', $monthStart)->sum('amount');
 
+        $prevWeekStart = Carbon::now()->subWeek()->startOfWeek();
+        $prevWeekEnd = Carbon::now()->subWeek()->endOfWeek();
+        $incomePrevWeek = (float) Payment::query()->whereBetween('created_at', [$prevWeekStart, $prevWeekEnd])->sum('amount');
+        $weekTrend = $incomePrevWeek > 0
+            ? round((($incomeWeek - $incomePrevWeek) / $incomePrevWeek) * 100, 1)
+            : null;
+
         $stats = [
             'orders_total' => Order::count(),
             'clients_total' => Client::count(),
@@ -31,12 +38,15 @@ class AdminController extends Controller
             'income_today' => $incomeToday,
             'income_week' => $incomeWeek,
             'income_month' => $incomeMonth,
+            'income_prev_week' => $incomePrevWeek,
+            'week_trend_pct' => $weekTrend,
+            'payments_today_count' => Payment::query()->whereDate('created_at', $today)->count(),
         ];
 
         $recentPayments = Payment::query()
-            ->with(['bill', 'client', 'user'])
+            ->with(['bill:id,bill_number,order_id', 'client:id,name', 'user' => fn ($q) => $q->with('employee:id,user_id,image')])
             ->orderByDesc('id')
-            ->limit(10)
+            ->limit(12)
             ->get();
 
         return view('admin.index', compact('stats', 'recentPayments'));

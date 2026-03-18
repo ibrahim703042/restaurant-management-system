@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\InventoryStock;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\EmployeeActivity;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Unit;
@@ -162,6 +163,8 @@ class PosController extends Controller
 
         $bill->load('order');
         $bill->syncDebtsFromPayments();
+
+        EmployeeActivity::logForAuthUser('pos.checkout', 'Completed sale '.$bill->bill_number, 'Bill', (int) $bill->id);
 
         session(['pos_store_id' => $storeId]);
 

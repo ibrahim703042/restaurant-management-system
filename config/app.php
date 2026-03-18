@@ -84,6 +84,9 @@ return [
 
     'locale' => 'en',
 
+    /** Locales available in the admin language switcher */
+    'available_locales' => ['en', 'fr'],
+
     /*
     |--------------------------------------------------------------------------
     | Application Fallback Locale

@@ -67,6 +67,20 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 ## Restaurant app (demo data)
 
+### Database connection refused (`SQLSTATE[HY000] [2002]`)
+
+Laravel is trying to reach MySQL on `127.0.0.1:3306` and nothing is listening. Pick one:
+
+1. **Docker (easiest if you have Docker Desktop)**  
+   From the project root: `docker compose up -d`  
+   In `.env` set **`DB_PASSWORD=root`** (and keep `DB_DATABASE=restaurant-app`, `DB_USERNAME=root`).  
+   Then: `php artisan config:clear` → `php artisan migrate`
+
+2. **XAMPP / Laragon / installed MySQL**  
+   Start the MySQL service, create database `restaurant-app`, and match `DB_USERNAME` / `DB_PASSWORD` in `.env`.
+
+---
+
 - **Shared catalog:** Products can have `store_id` null (sold at all branches). Run `php artisan products:deduplicate` (use `--dry-run` first) after migrating old data.
 - **Bulk demo seed (~100+ rows):** After `migrate` and `AdminUserSeeder`, run  
   `php artisan db:seed --class=BulkDemoSeeder`  

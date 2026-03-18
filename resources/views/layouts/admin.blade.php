@@ -10,7 +10,7 @@
     <link href="{{ asset('css/restaurant-admin.css') }}?v=2" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet" crossorigin="anonymous">
-    <link href="{{ asset('css/admin-components.css') }}?v=1" rel="stylesheet">
+    <link href="{{ asset('css/admin-components.css') }}?v=2" rel="stylesheet">
     @stack('styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">

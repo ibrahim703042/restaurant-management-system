@@ -17,7 +17,11 @@ class TableController extends Controller
     public function index()
     {
         $stores = Store::orderBy('name')->get(['id', 'name']);
-        $zones = DiningZone::query()->where('status', 1)->orderBy('store_id')->orderBy('sort_order')->orderBy('name')->get(['id', 'store_id', 'name']);
+        $zones = DiningZone::query()
+            ->where('status', 1)
+            ->with('store:id,name')
+            ->orderBy('name')
+            ->get();
 
         return view('tables.manage', compact('stores', 'zones'));
     }
@@ -26,7 +30,7 @@ class TableController extends Controller
     {
         $base = DiningTable::query()
             ->with(['store:id,name', 'zone:id,name'])
-            ->when($request->filled('store_id'), fn ($q) => $q->where('store_id', $request->store_id));
+            ->when($request->filled('zone_id'), fn ($q) => $q->where('zone_id', $request->zone_id));
 
         return $this->dataTablesOf(
             $base,

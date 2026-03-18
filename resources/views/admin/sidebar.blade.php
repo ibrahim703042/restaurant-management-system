@@ -54,6 +54,18 @@
         <a class="nav-link" href="{{ route('payroll.index') }}"><i class="fas fa-file-invoice nav-icon-width"></i> Payroll</a>
         @endif
         @endcan
+        @can('hr.shifts.manage')
+        <a class="nav-link {{ request()->routeIs('work-shifts.*') ? 'active' : '' }}" href="{{ route('work-shifts.index') }}"><i class="fas fa-calendar-alt nav-icon-width"></i> Work shifts</a>
+        @endcan
+        @can('hr.leaves.manage')
+        <a class="nav-link {{ request()->routeIs('employee-leaves.*') ? 'active' : '' }}" href="{{ route('employee-leaves.index') }}"><i class="fas fa-plane-departure nav-icon-width"></i> Leaves</a>
+        @endcan
+        @can('hr.performance.manage')
+        <a class="nav-link {{ request()->routeIs('waiter-performance.*') ? 'active' : '' }}" href="{{ route('waiter-performance.index') }}"><i class="fas fa-star nav-icon-width"></i> Waiter performance</a>
+        @endcan
+        @can('hr.activity.view')
+        <a class="nav-link {{ request()->routeIs('employee-activities.*') ? 'active' : '' }}" href="{{ route('employee-activities.index') }}"><i class="fas fa-running nav-icon-width"></i> Staff activity</a>
+        @endcan
         @endif
 
         <div class="sidebar-heading">Menu &amp; floor</div>

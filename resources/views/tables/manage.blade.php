@@ -1,25 +1,27 @@
 @extends('layouts.admin')
-@section('title', 'Dining tables')
-@section('page-title', 'Dining tables')
+@section('title', __('tables.title'))
+@section('page-title', __('tables.title'))
 @section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">Home</a></li>
-<li class="breadcrumb-item active">Tables</li>
+<li class="breadcrumb-item"><a href="{{ route('admin.index') }}">{{ __('nav.home') }}</a></li>
+<li class="breadcrumb-item active">{{ __('tables.title') }}</li>
 @endsection
 @section('main-section')
-<x-admin.table-card title="Tables" icon="fas fa-chair">
+<x-admin.table-card title="{{ __('tables.title') }}" icon="fas fa-chair">
     <x-slot:actions>
-        <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>Add table</button>
+        <button type="button" class="btn btn-primary" id="btnAdd"><i class="fas fa-plus me-1"></i>{{ __('tables.add') }}</button>
     </x-slot:actions>
     <x-slot:filters>
         <div class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small mb-0">Store</label>
-                <select class="form-select form-select-sm admin-ts-select" id="filterStore" data-placeholder="All stores">
-                    <option value="">All stores</option>
-                    @foreach ($stores as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
+            <div class="col-md-5">
+                <label class="form-label small mb-0">{{ __('tables.filter_zone') }}</label>
+                <select class="form-select form-select-sm" id="filterZone">
+                    <option value="">{{ __('tables.all_zones') }}</option>
+                    @foreach ($zones as $z)
+                    <option value="{{ $z->id }}">{{ $z->name }} — {{ $z->store->name ?? '—' }}</option>
+                    @endforeach
                 </select>
             </div>
-            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">Apply filter</button></div>
+            <div class="col-md-2"><button type="button" class="btn btn-outline-secondary btn-sm" id="btnApply">{{ __('tables.apply') }}</button></div>
         </div>
     </x-slot:filters>
     <thead class="table-light"><tr><th>#</th><th>Name</th><th>Store</th><th>Zone</th><th>Section</th><th>Capacity</th><th>Order</th><th>Status</th><th style="width:160px">Actions</th></tr></thead>
@@ -84,10 +86,7 @@
     const modal = new bootstrap.Modal(document.getElementById('modal')), form = document.getElementById('form');
     const dt = $('#dt-table').DataTable({
         serverSide: true,
-        ajax: { url: listUrl, data: function (d) {
-            var f = document.getElementById('filterStore');
-            d.store_id = f.tomselect ? f.tomselect.getValue() : f.value;
-        } },
+        ajax: { url: listUrl, data: function (d) { d.zone_id = document.getElementById('filterZone').value; } },
         columns: [
             { data: 'id' }, { data: 'table_name' }, { data: 'store' }, { data: 'zone' }, { data: 'section' },
             { data: 'capacity' }, { data: 'sort_order' }, { data: 'status_html', orderable: false, searchable: false },

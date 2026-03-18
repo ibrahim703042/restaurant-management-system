@@ -40,6 +40,10 @@ class RolePermissionSeeder extends Seeder
             'hr.positions.manage',
             'hr.payroll.view',
             'hr.payroll.manage',
+            'hr.shifts.manage',
+            'hr.leaves.manage',
+            'hr.performance.manage',
+            'hr.activity.view',
 
             'inventory.stock.view',
             'inventory.stock.adjust',
@@ -73,6 +77,7 @@ class RolePermissionSeeder extends Seeder
         $sync('hr_admin', [
             'sales.dashboard.view', 'hr.employees.view', 'hr.employees.manage', 'hr.positions.manage',
             'hr.payroll.view', 'hr.payroll.manage',
+            'hr.shifts.manage', 'hr.leaves.manage', 'hr.performance.manage', 'hr.activity.view',
         ]);
         $sync('accountant', [
             'sales.dashboard.view', 'sales.bills.manage', 'sales.payments.manage', 'sales.debts.manage',

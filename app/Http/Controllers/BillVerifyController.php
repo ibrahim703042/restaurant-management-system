@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bill;
 use App\Models\Client;
+use App\Models\EmployeeActivity;
 use App\Models\Payment;
 use App\Support\QrCodeSvg;
 use Illuminate\Http\Request;
@@ -69,6 +70,8 @@ class BillVerifyController extends Controller
 
         $bill->refresh()->load('order');
         $bill->syncDebtsFromPayments();
+
+        EmployeeActivity::logForAuthUser('bill.verify_payment', 'Recorded payment on bill '.$bill->bill_number, 'Bill', (int) $bill->id);
 
         return redirect()->route('bills.verify', $token)->with('status', 'Payment recorded.');
     }
